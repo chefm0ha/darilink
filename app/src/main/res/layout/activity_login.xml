@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="@color/antique_white"
+    tools:context=".activities.LoginActivity">
+
+    <!-- App Logo or Title -->
+    <ImageView
+        android:id="@+id/appLogo"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="50dp"
+        android:src="@drawable/logo"
+        tools:ignore="ContentDescription" />
+
+    <!-- Email Input -->
+    <EditText
+        android:id="@+id/emailInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/appLogo"
+        android:layout_marginTop="40dp"
+        android:hint="@string/email_hint"
+        android:inputType="textEmailAddress"
+        android:backgroundTint="@color/muted_terracotta"
+        android:textColorHint="@color/muted_terracotta"
+        android:textColor="@color/deep_umber"
+        android:padding="12dp"
+        android:drawableStart="@drawable/ic_email"
+        android:drawablePadding="8dp"
+        tools:ignore="Autofill" />
+
+    <!-- Password Input -->
+    <EditText
+        android:id="@+id/passwordInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/emailInput"
+        android:layout_marginTop="16dp"
+        android:hint="@string/password_hint"
+        android:inputType="textPassword"
+        android:backgroundTint="@color/muted_terracotta"
+        android:textColorHint="@color/muted_terracotta"
+        android:textColor="@color/deep_umber"
+        android:padding="12dp"
+        android:drawableStart="@drawable/ic_lock"
+        android:drawablePadding="8dp"
+        tools:ignore="Autofill" />
+
+    <!-- Forgot Password -->
+    <TextView
+        android:id="@+id/forgotPassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/passwordInput"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="8dp"
+        android:text="@string/forgot_password"
+        android:textColor="@color/muted_terracotta"
+        android:textSize="14sp"/>
+
+    <!-- Login Button -->
+    <Button
+        android:id="@+id/loginButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/forgotPassword"
+        android:layout_marginTop="24dp"
+        android:text="@string/login_button"
+        android:backgroundTint="@color/deep_umber"
+        android:textColor="@color/antique_white"
+        android:textSize="16sp"
+        android:fontFamily="sans-serif-condensed"/>
+
+    <!-- Sign Up Button -->
+    <Button
+        android:id="@+id/signUpButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/loginButton"
+        android:layout_marginTop="16dp"
+        android:text="@string/sign_up_button"
+        android:backgroundTint="@color/muted_terracotta"
+        android:textColor="@color/antique_white"
+        android:textSize="16sp"
+        android:fontFamily="sans-serif-condensed"/>
+
+</RelativeLayout>

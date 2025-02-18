@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DariLink</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Password</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="login_button">Login</string>
+    <string name="sign_up_button">Sign Up</string>
+    <string name="divider_text">OR</string>
+    <string name="continue_with_google">Continue with Google</string>
+    <string name="default_web_client_id">your-web-client-id.apps.googleusercontent.com</string>
+    <string name="first_name">First Name</string>
+    <string name="next">Next</string>
+    <string name="back">Back</string>
+    <string name="phone">Phone</string>
+    <string name="birthday">Birthday</string>
+    <string name="country">Country</string>
+    <string name="email">Email</string>
+    <string name="agent">Agent</string>
+    <string name="city">City</string>
+    <string name="agency_phone">Agency Phone</string>
+    <string name="agency_email">Agency Email</string>
+    <string name="agency_city">Agency City</string>
+    <string name="agency_country">Agency Country</string>
+    <string name="agency_address">Agency Address</string>
+    <string name="agency_name">Agency Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="address">Address</string>
+    <string name="re_enter_password">Re-enter Password</string>
+    <string name="logout">Logout</string>
+</resources>

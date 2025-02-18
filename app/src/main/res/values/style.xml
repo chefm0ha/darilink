@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="CustomErrorIcon" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="android:paddingEnd">42dp</item>
+    </style>
+
+    <!-- Custom style for the DatePickerDialog -->
+    <style name="CustomDatePickerDialog" parent="Theme.MaterialComponents.Light.Dialog.Alert">
+        <item name="android:datePickerStyle">@style/CustomDatePicker</item>
+        <item name="android:buttonBarPositiveButtonStyle">@style/CustomDialogButton</item>
+        <item name="android:buttonBarNegativeButtonStyle">@style/CustomDialogButton</item>
+    </style>
+
+    <style name="CustomDatePicker" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="android:textColorPrimary">@color/deep_umber</item>
+        <item name="android:textColorSecondary">@color/deep_umber</item>
+        <item name="android:textColor">@color/deep_umber</item>
+    </style>
+
+    <!-- Style for OK and Cancel buttons -->
+    <style name="CustomDialogButton" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/deep_umber</item>
+    </style>
+
+
+</resources>

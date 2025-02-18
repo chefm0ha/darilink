@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base Colors -->
+    <color name="antique_white">#FAEBD7</color> <!-- Soft off-white for background -->
+    <color name="deep_umber">#3E2723</color> <!-- Dark brown for text and buttons -->
+    <color name="muted_terracotta">#A1624E</color> <!-- Muted reddish-brown for accents -->
+    <color name="tea_caddy_green">#6B8E23</color> <!-- Muted green for secondary accents -->
+    <color name="rittenhouse_red">#8B0000</color> <!-- Deep red for highlights -->
+</resources>

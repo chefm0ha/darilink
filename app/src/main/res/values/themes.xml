@@ -1,0 +1,14 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.DariLink" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+
+    </style>
+
+    <style name="Theme.DariLink" parent="Base.Theme.DariLink">
+        <item name="colorPrimary">@color/deep_umber</item>
+        <item name="colorOnPrimary">@color/antique_white</item>
+        <item name="colorSurface">@color/antique_white</item>
+        <item name="colorOnSurface">@color/deep_umber</item>
+    </style>
+</resources>

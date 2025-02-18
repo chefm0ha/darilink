@@ -1,0 +1,12 @@
+{
+  "countries": [
+    {
+      "name": "Morocco",
+      "cities": ["Casablanca", "Rabat", "Marrakech", "Fez", "Tangier", "Agadir"]
+    },
+    {
+      "name": "France",
+      "cities": ["Paris", "Lyon", "Marseille", "Toulouse", "Nice", "Bordeaux"]
+    }
+  ]
+}
