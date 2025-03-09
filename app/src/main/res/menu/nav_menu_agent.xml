@@ -4,30 +4,26 @@
         <item
             android:id="@+id/nav_profile"
             android:icon="@drawable/ic_profile"
-            android:title="Profile" />
+            android:title="@string/profile" />
         <item
             android:id="@+id/nav_make_offer"
             android:icon="@drawable/ic_offer"
-            android:title="Make Offer" />
+            android:title="@string/make_offer" />
         <item
             android:id="@+id/nav_my_properties"
             android:icon="@drawable/ic_property"
-            android:title="My Properties" />
+            android:title="@string/my_properties" />
         <item
             android:id="@+id/nav_requests"
             android:icon="@drawable/ic_requests"
-            android:title="View Requests" />
-        <item
-            android:id="@+id/nav_messages"
-            android:icon="@drawable/ic_message"
-            android:title="Messages" />
+            android:title="@string/view_requests" />
         <item
             android:id="@+id/nav_settings"
             android:icon="@drawable/ic_settings"
-            android:title="Settings" />
+            android:title="@string/settings" />
         <item
             android:id="@+id/nav_logout"
             android:icon="@drawable/ic_logout"
-            android:title="Logout" />
+            android:title="@string/login_button" />
     </group>
 </menu>

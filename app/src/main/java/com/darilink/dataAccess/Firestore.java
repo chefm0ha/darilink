@@ -24,6 +24,10 @@ public class Firestore {
         return instance;
     }
 
+    public FirebaseFirestore getDb() {
+        return db;
+    }
+
     public void addClient(String uid, Client client) {
         ClientDTO clientDTO = ClientDTO.fromClient(client);
         db.collection(CLIENTS_COLLECTION)

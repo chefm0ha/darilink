@@ -47,7 +47,7 @@ public class SignUpActivity extends AppCompatActivity {
     private Button nextToStepTwoButton;
 
     // UI Components - Step 2
-    private EditText firstNameInput, lastNameInput, birthdayInput,
+    private EditText firstNameInput, lastNameInput,
             addressInput, phoneInput;
     private AutoCompleteTextView countryInput, cityInput;
     private Button backToStepOneButton, nextToStepThreeButton;
@@ -95,7 +95,6 @@ public class SignUpActivity extends AppCompatActivity {
         // Initialize Step 2 views
         firstNameInput = findViewById(R.id.firstNameInput);
         lastNameInput = findViewById(R.id.lastNameInput);
-        birthdayInput = findViewById(R.id.birthdayInput);
         countryInput = findViewById(R.id.countryInput);
         cityInput = findViewById(R.id.cityInput);
         addressInput = findViewById(R.id.addressInput);
@@ -119,7 +118,6 @@ public class SignUpActivity extends AppCompatActivity {
             isAgent = checkedId == R.id.agentRadio;
         });
 
-        birthdayInput.setOnClickListener(v -> showDatePickerDialog());
         countryInput.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) countryInput.showDropDown();
         });
@@ -222,10 +220,6 @@ public class SignUpActivity extends AppCompatActivity {
             lastNameInput.setError("Last name is required");
             return false;
         }
-        if (birthdayInput.getText().toString().trim().isEmpty()) {
-            birthdayInput.setError("Birthday is required");
-            return false;
-        }
         if (countryInput.getText().toString().trim().isEmpty()) {
             countryInput.setError("Country is required");
             return false;
@@ -297,12 +291,6 @@ public class SignUpActivity extends AppCompatActivity {
         user.setPassword(passwordInput.getText().toString().trim());
         user.setFirstName(firstNameInput.getText().toString().trim());
         user.setLastName(lastNameInput.getText().toString().trim());
-
-        String birthdayText = birthdayInput.getText().toString().trim();
-        LocalDate birthday = LocalDate.parse(birthdayText,
-                    DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        user.setBirthday(birthday);
-
         user.setCountry(countryInput.getText().toString().trim());
         user.setCity(cityInput.getText().toString().trim());
         user.setAddress(addressInput.getText().toString().trim());
@@ -321,25 +309,6 @@ public class SignUpActivity extends AppCompatActivity {
         agent.setAgencyCity(agencyCityInput.getText().toString().trim());
         agent.setAgencyEmail(agencyEmailInput.getText().toString().trim());
         agent.setAgencyPhone(agencyPhoneInput.getText().toString().trim());
-    }
-
-    private void showDatePickerDialog() {
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
-
-        DatePickerDialog datePickerDialog = new DatePickerDialog(
-                this,
-                R.style.CustomDatePickerDialog, // Apply custom style
-                (view, selectedYear, selectedMonth, selectedDay) -> {
-                    calendar.set(selectedYear, selectedMonth, selectedDay);
-                    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-                    birthdayInput.setText(sdf.format(calendar.getTime())); // Set formatted date
-                },
-                year, month, day
-        );
-
-        datePickerDialog.show();
     }
 
     private void loadCountries() {

@@ -50,4 +50,5 @@ dependencies {
     implementation(libs.play.services.auth)
 
     implementation(platform(libs.firebase.bom))
+    implementation(libs.hdodenhof.circleimageview)
 }

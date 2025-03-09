@@ -9,7 +9,6 @@ public class UserDTO {
     private String email;
     private String firstName;
     private String lastName;
-    private String birthday;
     private String country;
     private String city;
     private String address;
@@ -21,8 +20,6 @@ public class UserDTO {
             dto.setEmail(user.getEmail());
             dto.setFirstName(user.getFirstName());
             dto.setLastName(user.getLastName());
-            // Convert LocalDate to String in dd/MM/yyyy format
-            dto.setBirthday(user.getBirthday().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
             dto.setCountry(user.getCountry());
             dto.setCity(user.getCity());
             dto.setAddress(user.getAddress());
@@ -40,8 +37,6 @@ public class UserDTO {
     public void setFirstName(String firstName) { this.firstName = firstName; }
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
-    public String getBirthday() { return birthday; }
-    public void setBirthday(String birthday) { this.birthday = birthday; }
     public String getCountry() { return country; }
     public void setCountry(String country) { this.country = country; }
     public String getCity() { return city; }
