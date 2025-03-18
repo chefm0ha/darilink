@@ -172,6 +172,12 @@ public class SignUpActivity extends AppCompatActivity {
         finishSignUpButton.setOnClickListener(v -> {
             if (validateStepThree()) {
                 createUser();
+                Toast.makeText(SignUpActivity.this, "Account created successfully!", Toast.LENGTH_LONG).show();
+                // Finish current activity and go back to login
+                Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                finish();
             }
         });
     }
@@ -277,7 +283,7 @@ public class SignUpActivity extends AppCompatActivity {
     private void createUser() {
         if (isAgent) {
             Agent agent = new Agent();
-            setAgentData(agent); // Set common user data + agent-specific data
+            setAgentData(agent); // Set common user data + agent-specific data;
             firebase.createUserWithEmailAndPassword(agent);
         } else {
             Client client = new Client();
@@ -303,6 +309,7 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     private void setAgentData(@NonNull Agent agent) {
+        setUserData(agent); // Set common user data
         agent.setAgencyName(agencyNameInput.getText().toString().trim());
         agent.setAgencyAddress(agencyAddressInput.getText().toString().trim());
         agent.setAgencyCountry(agencyCountryInput.getText().toString().trim());

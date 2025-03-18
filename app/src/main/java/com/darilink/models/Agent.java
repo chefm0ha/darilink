@@ -64,4 +64,25 @@ public class Agent extends User {
     public void setSubscription(Subscription subscription) {
         this.subscription = subscription;
     }
+
+    @Override
+    public String toString() {
+        return "Agent{" +
+                "agencyName='" + agencyName + '\'' +
+                ", agencyAddress='" + agencyAddress + '\'' +
+                ", agencyCountry='" + agencyCountry + '\'' +
+                ", agencyCity='" + agencyCity + '\'' +
+                ", agencyEmail='" + agencyEmail + '\'' +
+                ", agencyPhone='" + agencyPhone + '\'' +
+                ", subscription=" + subscription +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", country='" + country + '\'' +
+                ", city='" + city + '\'' +
+                ", address='" + address + '\'' +
+                ", phone='" + phone + '\'' +
+                '}';
+    }
 }

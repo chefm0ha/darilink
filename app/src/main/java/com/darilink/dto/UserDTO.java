@@ -2,9 +2,6 @@ package com.darilink.dto;
 
 import com.darilink.models.User;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-
 public class UserDTO {
     private String email;
     private String firstName;
