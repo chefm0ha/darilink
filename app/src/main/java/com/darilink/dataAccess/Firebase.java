@@ -24,6 +24,10 @@ public class Firebase {
         return instance;
     }
 
+    public FirebaseUser getCurrentUser() {
+        return mAuth.getCurrentUser();
+    }
+
     public void createUserWithEmailAndPassword(User user) {
         mAuth.createUserWithEmailAndPassword(user.getEmail(), user.getPassword())
                 .addOnCompleteListener(task -> {

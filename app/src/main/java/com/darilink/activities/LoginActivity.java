@@ -29,6 +29,13 @@ public class LoginActivity extends AppCompatActivity {
         // Initialize Firebase Auth
         firebase = Firebase.getInstance();
 
+        FirebaseUser currentUser = firebase.getCurrentUser();
+        if (currentUser != null) {
+            // User is already signed in, redirect to MainActivity
+            navigateToMainActivity();
+            return; // Exit onCreate to prevent setting up UI for login
+        }
+
         // Initialize UI elements
         emailInput = findViewById(R.id.emailInput);
         passwordInput = findViewById(R.id.passwordInput);
@@ -64,10 +71,7 @@ public class LoginActivity extends AppCompatActivity {
             public void onSuccess(FirebaseUser user) {
                 Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
                 // Navigate to MainActivity
-                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-                finish();
+                navigateToMainActivity();
             }
 
             @Override
@@ -75,5 +79,12 @@ public class LoginActivity extends AppCompatActivity {
                 Toast.makeText(LoginActivity.this, error, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void navigateToMainActivity() {
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
     }
 }
