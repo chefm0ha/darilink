@@ -19,6 +19,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.darilink.R;
 import com.darilink.dataAccess.Firebase;
 import com.darilink.dataAccess.Firestore;
+import com.darilink.fragments.MyPropertiesFragment;
 import com.darilink.models.Agent;
 import com.darilink.models.Client;
 import com.google.android.material.navigation.NavigationView;
@@ -133,6 +134,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivity(intent);
             finish();
             return true;
+        } else if (id == R.id.nav_make_offer) {
+            // Start Make Offer activity
+            Intent intent = new Intent(MainActivity.this, MakeOfferActivity.class);
+            startActivity(intent);
+        } else if (id == R.id.nav_my_properties) {
+            // Load My Properties fragment
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.content_frame, new MyPropertiesFragment())
+                    .commit();
         }
 
         // Handle other menu items based on user type

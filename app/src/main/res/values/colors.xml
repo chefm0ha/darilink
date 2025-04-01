@@ -6,4 +6,5 @@
     <color name="muted_terracotta">#A1624E</color> <!-- Muted reddish-brown for accents -->
     <color name="tea_caddy_green">#6B8E23</color> <!-- Muted green for secondary accents -->
     <color name="rittenhouse_red">#8B0000</color> <!-- Deep red for highlights -->
+    <color name="white">#FFF</color>
 </resources>

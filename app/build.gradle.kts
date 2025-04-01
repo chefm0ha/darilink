@@ -51,4 +51,9 @@ dependencies {
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.hdodenhof.circleimageview)
+
+    implementation(libs.cloudinary.android)
+    implementation(libs.swiperefreshlayout)
+    implementation(libs.glide)
+    implementation(libs.cloudinary.android)
 }

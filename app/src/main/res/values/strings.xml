@@ -39,4 +39,59 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="client">Client</string>
+
+    <!-- Make Offer Screen -->
+    <string name="create_new_listing">Create New Listing</string>
+    <string name="edit_listing">Edit Listing</string>
+    <string name="property_images">Property Images</string>
+    <string name="add_photo">Add Photo</string>
+    <string name="basic_information">Basic Information</string>
+    <string name="property_title">Property Title</string>
+    <string name="property_type">Property Type</string>
+    <string name="property_details">Property Details</string>
+    <string name="area_sqm">Area (m²)</string>
+    <string name="rent_per_month">Rent (per month)</string>
+    <string name="bedrooms">Bedrooms</string>
+    <string name="bathrooms">Bathrooms</string>
+    <string name="floor_number">Floor Number</string>
+    <string name="location">Location</string>
+    <string name="description">Description</string>
+    <string name="property_description">Description of your property</string>
+    <string name="amenities">Amenities</string>
+    <string name="wifi">WiFi</string>
+    <string name="parking">Parking</string>
+    <string name="pool">Pool</string>
+    <string name="gym">Gym</string>
+    <string name="air_conditioning">Air Conditioning</string>
+    <string name="furnished">Furnished</string>
+    <string name="add_more">Add More</string>
+    <string name="add_amenity">Add Amenity</string>
+    <string name="amenity_name">Amenity Name</string>
+    <string name="add">Add</string>
+    <string name="cancel">Cancel</string>
+    <string name="availability">Availability</string>
+    <string name="available_for_rent">Available for Rent</string>
+    <string name="save_listing">Save Listing</string>
+    <string name="saving">Saving…</string>
+    <string name="discard_changes">Discard Changes?</string>
+    <string name="discard_changes_message">Are you sure you want to discard your changes?</string>
+    <string name="discard">Discard</string>
+
+    <!-- My Properties Screen -->
+    <string name="all_properties">All Properties</string>
+    <string name="available">Available</string>
+    <string name="rented">Rented</string>
+    <string name="search_properties_hint">Search by title, location…</string>
+    <string name="no_properties_found">No Properties Found</string>
+    <string name="no_properties_message">You haven\'t added any properties yet or none match your current filters.</string>
+    <string name="requests_count">%d Requests</string>
+    <string name="posted_on">Posted on %s</string>
+    <string name="delete_property">Delete Property</string>
+    <string name="delete_property_confirmation">Are you sure you want to delete this property? This action cannot be undone.</string>
+    <string name="delete">Delete</string>
+    <string name="bedrooms_count">%d Beds</string>
+    <string name="bathrooms_count">%d Bath</string>
+    <string name="area_value">%.0f m²</string>
+    <string name="property_image">Property Image</string>
+    <string name="delete_image">Delete Image</string>
 </resources>
