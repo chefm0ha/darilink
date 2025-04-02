@@ -17,22 +17,30 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.bumptech.glide.Glide;
 import com.darilink.R;
 import com.darilink.dataAccess.Firebase;
 import com.darilink.dataAccess.Firestore;
 import com.darilink.fragments.MakeOfferFragment;
 import com.darilink.fragments.MyPropertiesFragment;
+import com.darilink.fragments.ProfileFragment;
 import com.darilink.models.Agent;
 import com.darilink.models.Client;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
     private Firebase firebase;
     private Firestore firestore;
+
+    // Nav header views
+    private CircleImageView navUserImage;
+    private TextView navUserName, navUserEmail;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +58,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // Setup drawer
         drawerLayout = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.nav_view);
+
+        // Get nav header views
+        View headerView = navigationView.getHeaderView(0);
+        navUserName = headerView.findViewById(R.id.nav_user_name);
+        navUserEmail = headerView.findViewById(R.id.nav_user_email);
+        navUserImage = headerView.findViewById(R.id.nav_user_image);
 
         // Add burger icon
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -77,14 +91,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
                         // User is an agent
-                        setupAgentNavigation(documentSnapshot.toObject(Agent.class));
+                        Agent agent = documentSnapshot.toObject(Agent.class);
+                        setupAgentNavigation(agent);
                     } else {
                         // Check in clients collection
                         firestore.getDb().collection("clients").document(uid).get()
                                 .addOnSuccessListener(clientSnapshot -> {
                                     if (clientSnapshot.exists()) {
                                         // User is a client
-                                        setupClientNavigation(clientSnapshot.toObject(Client.class));
+                                        Client client = clientSnapshot.toObject(Client.class);
+                                        setupClientNavigation(client);
                                     }
                                 });
                     }
@@ -97,14 +113,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView.inflateMenu(R.menu.nav_menu_agent);
 
         // Update header
-        View headerView = navigationView.getHeaderView(0);
-        TextView userName = headerView.findViewById(R.id.nav_user_name);
-        TextView userEmail = headerView.findViewById(R.id.nav_user_email);
-        ImageView userImage = headerView.findViewById(R.id.nav_user_image);
-
-        userName.setText(agent.getFirstName() + " " + agent.getLastName());
-        userEmail.setText(agent.getEmail());
-        // TODO: Set agent image if available
+        updateNavigationHeader(agent.getFirstName(), agent.getLastName(),
+                agent.getEmail(), agent.getProfileImageUrl());
 
         // Load My Properties fragment by default for agents
         loadFragment(new MyPropertiesFragment());
@@ -116,16 +126,37 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView.inflateMenu(R.menu.nav_menu_client);
 
         // Update header
-        View headerView = navigationView.getHeaderView(0);
-        TextView userName = headerView.findViewById(R.id.nav_user_name);
-        TextView userEmail = headerView.findViewById(R.id.nav_user_email);
-        ImageView userImage = headerView.findViewById(R.id.nav_user_image);
-
-        userName.setText(client.getFirstName() + " " + client.getLastName());
-        userEmail.setText(client.getEmail());
-        // TODO: Set client image if available
+        updateNavigationHeader(client.getFirstName(), client.getLastName(),
+                client.getEmail(), client.getProfileImageUrl());
 
         // TODO: Load default client fragment (like property search)
+    }
+
+    private void updateNavigationHeader(String firstName, String lastName, String email, String profileImageUrl) {
+        // Set user name and email
+        navUserName.setText(firstName + " " + lastName);
+        navUserEmail.setText(email);
+
+        // Load profile image if available
+        if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
+            Glide.with(this)
+                    .load(profileImageUrl)
+                    .circleCrop()
+                    .placeholder(R.drawable.default_profile)
+                    .error(R.drawable.default_profile)
+                    .into(navUserImage);
+        } else {
+            // Use default profile image
+            navUserImage.setImageResource(R.drawable.default_profile);
+        }
+
+        // Make navigation header clickable to go to profile
+        View headerView = navigationView.getHeaderView(0);
+        headerView.setOnClickListener(v -> {
+            // Load Profile fragment
+            loadFragment(new ProfileFragment());
+            drawerLayout.closeDrawer(GravityCompat.START);
+        });
     }
 
     @Override
@@ -141,6 +172,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivity(intent);
             finish();
             return true;
+        } else if (id == R.id.nav_profile) {
+            // Load Profile fragment
+            loadFragment(new ProfileFragment());
         } else if (id == R.id.nav_make_offer) {
             // Load Make Offer fragment
             loadFragment(MakeOfferFragment.newInstance(null));
@@ -172,6 +206,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             } else {
                 super.onBackPressed();
             }
+        }
+    }
+
+    // Method to refresh navigation header (call this after profile updates)
+    public void refreshNavigationHeader() {
+        FirebaseUser currentUser = firebase.getCurrentUser();
+        if (currentUser != null) {
+            String uid = currentUser.getUid();
+            checkUserTypeAndUpdateUI(uid);
         }
     }
 }

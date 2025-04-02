@@ -9,6 +9,7 @@ public class User {
     protected String city;
     protected String address;
     protected String phone;
+    protected String profileImageUrl;
 
     public String getEmail() {
         return email;
@@ -72,5 +73,13 @@ public class User {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }

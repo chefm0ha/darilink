@@ -12,7 +12,8 @@
         <item
             android:id="@+id/nav_my_properties"
             android:icon="@drawable/ic_property"
-            android:title="@string/my_properties" />
+            android:title="@string/my_properties"
+            android:checked="true" />
         <item
             android:id="@+id/nav_requests"
             android:icon="@drawable/ic_requests"

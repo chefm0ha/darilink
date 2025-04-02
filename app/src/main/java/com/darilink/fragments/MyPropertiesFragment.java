@@ -248,7 +248,7 @@ public class MyPropertiesFragment extends Fragment implements PropertyAdapter.Pr
     private void deleteProperty(Offer offer) {
         swipeRefresh.setRefreshing(true);
 
-        firestore.getDb().collection("offers").document(offer.getId())
+        firestore.getDb().collection("Offer").document(offer.getId())
                 .delete()
                 .addOnSuccessListener(aVoid -> {
                     swipeRefresh.setRefreshing(false);
