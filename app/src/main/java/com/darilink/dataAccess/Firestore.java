@@ -4,6 +4,8 @@ import com.darilink.dto.AgentDTO;
 import com.darilink.dto.ClientDTO;
 import com.darilink.dto.OfferDTO;
 import com.darilink.models.Offer;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.darilink.models.Agent;

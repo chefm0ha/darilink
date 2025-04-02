@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -15,10 +14,13 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.darilink.R;
 import com.darilink.dataAccess.Firebase;
 import com.darilink.dataAccess.Firestore;
+import com.darilink.fragments.MakeOfferFragment;
 import com.darilink.fragments.MyPropertiesFragment;
 import com.darilink.models.Agent;
 import com.darilink.models.Client;
@@ -103,6 +105,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         userName.setText(agent.getFirstName() + " " + agent.getLastName());
         userEmail.setText(agent.getEmail());
         // TODO: Set agent image if available
+
+        // Load My Properties fragment by default for agents
+        loadFragment(new MyPropertiesFragment());
     }
 
     private void setupClientNavigation(Client client) {
@@ -119,6 +124,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         userName.setText(client.getFirstName() + " " + client.getLastName());
         userEmail.setText(client.getEmail());
         // TODO: Set client image if available
+
+        // TODO: Load default client fragment (like property search)
     }
 
     @Override
@@ -135,21 +142,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             finish();
             return true;
         } else if (id == R.id.nav_make_offer) {
-            // Start Make Offer activity
-            Intent intent = new Intent(MainActivity.this, MakeOfferActivity.class);
-            startActivity(intent);
+            // Load Make Offer fragment
+            loadFragment(MakeOfferFragment.newInstance(null));
         } else if (id == R.id.nav_my_properties) {
             // Load My Properties fragment
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.content_frame, new MyPropertiesFragment())
-                    .commit();
+            loadFragment(new MyPropertiesFragment());
         }
-
-        // Handle other menu items based on user type
-        // TODO: Implement navigation to other screens
+        // Handle other menu items
 
         drawerLayout.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    // Helper method to load fragments
+    private void loadFragment(Fragment fragment) {
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.content_frame, fragment);
+        transaction.addToBackStack(null);
+        transaction.commit();
     }
 
     @Override
@@ -157,7 +167,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+            if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                getSupportFragmentManager().popBackStack();
+            } else {
+                super.onBackPressed();
+            }
         }
     }
 }

@@ -31,7 +31,8 @@
         <FrameLayout
             android:id="@+id/content_frame"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:background="@color/antique_white" />
 
     </LinearLayout>
 
@@ -43,7 +44,9 @@
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
         app:headerLayout="@layout/nav_header"
-        app:itemIconTint="@color/deep_umber"
-        app:itemTextColor="@color/deep_umber"/>
+        app:itemIconTint="@color/nav_item_colors"
+        app:itemTextColor="@color/nav_item_colors"
+        app:itemBackground="@drawable/nav_item_background"
+        android:background="@color/antique_white" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

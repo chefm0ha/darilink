@@ -1,4 +1,4 @@
-package com.darilink.activities;
+package com.darilink.fragments;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -8,8 +8,8 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -21,9 +21,10 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
+import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.cloudinary.android.MediaManager;
@@ -47,14 +48,14 @@ import org.json.JSONObject;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MakeOfferActivity extends AppCompatActivity {
+public class MakeOfferFragment extends Fragment {
 
-    private static final String TAG = "MakeOfferActivity";
+    private static final String TAG = "MakeOfferFragment";
+    private static final String ARG_OFFER_ID = "offer_id";
 
     private LinearLayout imageContainer;
     private CardView addImageCard;
@@ -76,68 +77,100 @@ public class MakeOfferActivity extends AppCompatActivity {
 
     private Offer currentOffer; // For editing existing offers
     private boolean isEditMode = false;
+    private String offerId;
 
-    private ActivityResultLauncher<Intent> imagePickerLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                    Uri selectedImage = result.getData().getData();
-                    if (selectedImage != null) {
-                        selectedImages.add(selectedImage);
-                        addImageView(selectedImage);
-                    }
-                }
-            });
+    private ActivityResultLauncher<Intent> imagePickerLauncher;
+
+    public MakeOfferFragment() {
+        // Required empty public constructor
+    }
+
+    public static MakeOfferFragment newInstance(String offerId) {
+        MakeOfferFragment fragment = new MakeOfferFragment();
+        Bundle args = new Bundle();
+        if (offerId != null) {
+            args.putString(ARG_OFFER_ID, offerId);
+        }
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.make_offer);
-
         // Initialize Firebase
         firestore = Firestore.getInstance();
         firebase = Firebase.getInstance();
 
-        setupToolbar();
-        initializeViews();
+        if (getArguments() != null && getArguments().containsKey(ARG_OFFER_ID)) {
+            offerId = getArguments().getString(ARG_OFFER_ID);
+            isEditMode = offerId != null && !offerId.isEmpty();
+        }
+
+        // Initialize the image picker launcher
+        imagePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Uri selectedImage = result.getData().getData();
+                        if (selectedImage != null) {
+                            selectedImages.add(selectedImage);
+                            addImageView(selectedImage);
+                        }
+                    }
+                });
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        View view = inflater.inflate(R.layout.fragment_make_offer, container, false);
+
+        // Set the title in the activity's action bar
+        if (getActivity() instanceof AppCompatActivity) {
+            AppCompatActivity activity = (AppCompatActivity) getActivity();
+            if (activity.getSupportActionBar() != null) {
+                activity.getSupportActionBar().setTitle(isEditMode ? R.string.edit_listing : R.string.create_new_listing);
+                activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            }
+        }
+
+        return view;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        initializeViews(view);
         setupListeners();
         loadDropdownData();
 
         // Check if editing an existing offer
-        if (getIntent().hasExtra("offer_id")) {
-            isEditMode = true;
-            String offerId = getIntent().getStringExtra("offer_id");
+        if (isEditMode) {
             loadOfferData(offerId);
         }
     }
 
-    private void setupToolbar() {
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle(isEditMode ? R.string.edit_listing : R.string.create_new_listing);
-        }
-    }
-
-    private void initializeViews() {
-        imageContainer = findViewById(R.id.imageContainer);
-        addImageCard = findViewById(R.id.addImageCard);
-        titleInput = findViewById(R.id.titleInput);
-        propertyTypeInput = findViewById(R.id.propertyTypeInput);
-        areaInput = findViewById(R.id.areaInput);
-        rentInput = findViewById(R.id.rentInput);
-        bedroomsInput = findViewById(R.id.bedroomsInput);
-        bathroomsInput = findViewById(R.id.bathroomsInput);
-        floorNumberInput = findViewById(R.id.floorNumberInput);
-        addressInput = findViewById(R.id.addressInput);
-        countryInput = findViewById(R.id.countryInput);
-        cityInput = findViewById(R.id.cityInput);
-        descriptionInput = findViewById(R.id.descriptionInput);
-        amenitiesChipGroup = findViewById(R.id.amenitiesChipGroup);
-        addAmenityChip = findViewById(R.id.addAmenityChip);
-        availabilitySwitch = findViewById(R.id.availabilitySwitch);
-        saveOfferButton = findViewById(R.id.saveOfferButton);
+    private void initializeViews(View view) {
+        imageContainer = view.findViewById(R.id.imageContainer);
+        addImageCard = view.findViewById(R.id.addImageCard);
+        titleInput = view.findViewById(R.id.titleInput);
+        propertyTypeInput = view.findViewById(R.id.propertyTypeInput);
+        areaInput = view.findViewById(R.id.areaInput);
+        rentInput = view.findViewById(R.id.rentInput);
+        bedroomsInput = view.findViewById(R.id.bedroomsInput);
+        bathroomsInput = view.findViewById(R.id.bathroomsInput);
+        floorNumberInput = view.findViewById(R.id.floorNumberInput);
+        addressInput = view.findViewById(R.id.addressInput);
+        countryInput = view.findViewById(R.id.countryInput);
+        cityInput = view.findViewById(R.id.cityInput);
+        descriptionInput = view.findViewById(R.id.descriptionInput);
+        amenitiesChipGroup = view.findViewById(R.id.amenitiesChipGroup);
+        addAmenityChip = view.findViewById(R.id.addAmenityChip);
+        availabilitySwitch = view.findViewById(R.id.availabilitySwitch);
+        saveOfferButton = view.findViewById(R.id.saveOfferButton);
     }
 
     private void setupListeners() {
@@ -151,10 +184,29 @@ public class MakeOfferActivity extends AppCompatActivity {
             loadCities(selectedCountry);
         });
 
+        // Show dropdown on focus
+        countryInput.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                countryInput.showDropDown();
+            }
+        });
+
+        cityInput.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                cityInput.showDropDown();
+            }
+        });
+
+        propertyTypeInput.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                propertyTypeInput.showDropDown();
+            }
+        });
+
         saveOfferButton.setOnClickListener(v -> {
             if (validateInputs()) {
                 if (selectedImages.isEmpty() && !isEditMode) {
-                    Toast.makeText(this, "Please add at least one image", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Please add at least one image", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 saveOffer();
@@ -169,7 +221,7 @@ public class MakeOfferActivity extends AppCompatActivity {
 
     private void addImageView(Uri imageUri) {
         // Inflate image item view
-        View imageItemView = LayoutInflater.from(this).inflate(R.layout.item_property_image, imageContainer, false);
+        View imageItemView = LayoutInflater.from(getContext()).inflate(R.layout.item_property_image, imageContainer, false);
 
         // Find views in the inflated layout
         ImageView imageView = imageItemView.findViewById(R.id.propertyImage);
@@ -193,7 +245,7 @@ public class MakeOfferActivity extends AppCompatActivity {
 
     private void displayExistingImage(String imageUrl) {
         // Inflate image item view
-        View imageItemView = LayoutInflater.from(this).inflate(R.layout.item_property_image, imageContainer, false);
+        View imageItemView = LayoutInflater.from(getContext()).inflate(R.layout.item_property_image, imageContainer, false);
 
         // Find views in the inflated layout
         ImageView imageView = imageItemView.findViewById(R.id.propertyImage);
@@ -220,9 +272,9 @@ public class MakeOfferActivity extends AppCompatActivity {
 
     private void loadDropdownData() {
         // Property types
-        String[] propertyTypes = {"Apartment", "House", "Villa", "Studio", "Condo", "Penthouse", "Duplex"};
+        String[] propertyTypes = {"Apartment", "Studio", "Duplex"};
         ArrayAdapter<String> propertyTypeAdapter = new ArrayAdapter<>(
-                this, android.R.layout.simple_dropdown_item_1line, propertyTypes);
+                requireContext(), android.R.layout.simple_dropdown_item_1line, propertyTypes);
         propertyTypeInput.setAdapter(propertyTypeAdapter);
 
         // Load countries
@@ -260,24 +312,24 @@ public class MakeOfferActivity extends AppCompatActivity {
             Log.e(TAG, "Error loading countries", e);
         }
 
-        ArrayAdapter<String> countryAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, countryList);
+        ArrayAdapter<String> countryAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, countryList);
         countryInput.setAdapter(countryAdapter);
     }
 
     private void loadCities(String selectedCountry) {
         List<String> cities = countryCityMap.get(selectedCountry);
         if (cities != null) {
-            ArrayAdapter<String> cityAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, cities);
+            ArrayAdapter<String> cityAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, cities);
             cityInput.setAdapter(cityAdapter);
         }
     }
 
     private void showAddAmenityDialog() {
         // Show dialog to add custom amenity
-        EditText input = new EditText(this);
+        EditText input = new EditText(getContext());
         input.setHint(R.string.amenity_name);
 
-        new MaterialAlertDialogBuilder(this)
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.add_amenity)
                 .setView(input)
                 .setPositiveButton(R.string.add, (dialog, which) -> {
@@ -291,7 +343,7 @@ public class MakeOfferActivity extends AppCompatActivity {
     }
 
     private void addCustomAmenity(String amenityName) {
-        Chip chip = new Chip(this);
+        Chip chip = new Chip(requireContext());
         chip.setText(amenityName);
         chip.setCheckable(true);
         chip.setChecked(true);
@@ -428,7 +480,7 @@ public class MakeOfferActivity extends AppCompatActivity {
         final int[] errorCount = {0};
 
         // Show progress dialog
-        ProgressDialog progressDialog = new ProgressDialog(this);
+        ProgressDialog progressDialog = new ProgressDialog(getContext());
         progressDialog.setTitle("Uploading Images");
         progressDialog.setMessage("Please wait while we upload your images...");
         progressDialog.setCancelable(false);
@@ -462,9 +514,11 @@ public class MakeOfferActivity extends AppCompatActivity {
                         public void onError(String requestId, ErrorInfo error) {
                             errorCount[0]++;
                             Log.e(TAG, "Upload error: " + error.getDescription());
-                            Toast.makeText(MakeOfferActivity.this,
-                                    "Error uploading image: " + error.getDescription(),
-                                    Toast.LENGTH_SHORT).show();
+                            if (getContext() != null) {
+                                Toast.makeText(getContext(),
+                                        "Error uploading image: " + error.getDescription(),
+                                        Toast.LENGTH_SHORT).show();
+                            }
 
                             checkIfAllUploaded(uploadedCount[0], errorCount[0], totalImages, progressDialog);
                         }
@@ -493,9 +547,11 @@ public class MakeOfferActivity extends AppCompatActivity {
                 // All uploads failed
                 saveOfferButton.setEnabled(true);
                 saveOfferButton.setText(R.string.save_listing);
-                Toast.makeText(MakeOfferActivity.this,
-                        "Failed to upload images. Please try again.",
-                        Toast.LENGTH_SHORT).show();
+                if (getContext() != null) {
+                    Toast.makeText(getContext(),
+                            "Failed to upload images. Please try again.",
+                            Toast.LENGTH_SHORT).show();
+                }
             }
         }
     }
@@ -503,7 +559,9 @@ public class MakeOfferActivity extends AppCompatActivity {
     private void createOfferInFirestore() {
         FirebaseUser currentUser = firebase.getCurrentUser();
         if (currentUser == null) {
-            Toast.makeText(this, "You must be logged in", Toast.LENGTH_SHORT).show();
+            if (getContext() != null) {
+                Toast.makeText(getContext(), "You must be logged in", Toast.LENGTH_SHORT).show();
+            }
             return;
         }
 
@@ -517,8 +575,14 @@ public class MakeOfferActivity extends AppCompatActivity {
         firestore.addOffer(offer);
 
         saveOfferButton.setEnabled(true);
-        Toast.makeText(this, "Property listing saved successfully", Toast.LENGTH_SHORT).show();
-        finish();
+        if (getContext() != null) {
+            Toast.makeText(getContext(), "Property listing saved successfully", Toast.LENGTH_SHORT).show();
+        }
+
+        // Navigate back to the previous fragment
+        if (getActivity() != null) {
+            getActivity().getSupportFragmentManager().popBackStack();
+        }
     }
 
     private void updateExistingOffer() {
@@ -549,7 +613,7 @@ public class MakeOfferActivity extends AppCompatActivity {
             final int[] errorCount = {0};
 
             // Show progress dialog
-            ProgressDialog progressDialog = new ProgressDialog(this);
+            ProgressDialog progressDialog = new ProgressDialog(getContext());
             progressDialog.setTitle("Uploading Images");
             progressDialog.setMessage("Please wait while we upload your new images...");
             progressDialog.setCancelable(false);
@@ -588,9 +652,11 @@ public class MakeOfferActivity extends AppCompatActivity {
                             public void onError(String requestId, ErrorInfo error) {
                                 errorCount[0]++;
                                 Log.e(TAG, "Upload error: " + error.getDescription());
-                                Toast.makeText(MakeOfferActivity.this,
-                                        "Error uploading image: " + error.getDescription(),
-                                        Toast.LENGTH_SHORT).show();
+                                if (getContext() != null) {
+                                    Toast.makeText(getContext(),
+                                            "Error uploading image: " + error.getDescription(),
+                                            Toast.LENGTH_SHORT).show();
+                                }
 
                                 if (uploadedCount[0] + errorCount[0] == totalImages) {
                                     progressDialog.dismiss();
@@ -602,9 +668,11 @@ public class MakeOfferActivity extends AppCompatActivity {
                                         // All uploads failed and no existing images
                                         saveOfferButton.setEnabled(true);
                                         saveOfferButton.setText(R.string.save_listing);
-                                        Toast.makeText(MakeOfferActivity.this,
-                                                "Failed to upload images. Please try again.",
-                                                Toast.LENGTH_SHORT).show();
+                                        if (getContext() != null) {
+                                            Toast.makeText(getContext(),
+                                                    "Failed to upload images. Please try again.",
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
                                     }
                                 }
                             }
@@ -632,8 +700,14 @@ public class MakeOfferActivity extends AppCompatActivity {
 
         saveOfferButton.setEnabled(true);
         saveOfferButton.setText(R.string.save_listing);
-        Toast.makeText(this, "Property listing updated successfully", Toast.LENGTH_SHORT).show();
-        finish();
+        if (getContext() != null) {
+            Toast.makeText(getContext(), "Property listing updated successfully", Toast.LENGTH_SHORT).show();
+        }
+
+        // Navigate back to the previous fragment
+        if (getActivity() != null) {
+            getActivity().getSupportFragmentManager().popBackStack();
+        }
     }
 
     private void populateOfferFromInputs(Offer offer) {
@@ -666,14 +740,14 @@ public class MakeOfferActivity extends AppCompatActivity {
 
     private void loadOfferData(String offerId) {
         // Show progress dialog
-        ProgressDialog progressDialog = new ProgressDialog(this);
+        ProgressDialog progressDialog = new ProgressDialog(getContext());
         progressDialog.setTitle("Loading Property");
         progressDialog.setMessage("Please wait...");
         progressDialog.setCancelable(false);
         progressDialog.show();
 
         // Fetch offer data from Firestore
-        firestore.getDb().collection("offers").document(offerId).get()
+        firestore.getDb().collection("Offer").document(offerId).get()
                 .addOnSuccessListener(documentSnapshot -> {
                     progressDialog.dismiss();
                     if (documentSnapshot.exists()) {
@@ -682,14 +756,22 @@ public class MakeOfferActivity extends AppCompatActivity {
                             populateFieldsFromOffer();
                         }
                     } else {
-                        Toast.makeText(this, "Offer not found", Toast.LENGTH_SHORT).show();
-                        finish();
+                        if (getContext() != null) {
+                            Toast.makeText(getContext(), "Offer not found", Toast.LENGTH_SHORT).show();
+                        }
+                        if (getActivity() != null) {
+                            getActivity().getSupportFragmentManager().popBackStack();
+                        }
                     }
                 })
                 .addOnFailureListener(e -> {
                     progressDialog.dismiss();
-                    Toast.makeText(this, "Error loading offer: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    finish();
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "Error loading offer: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                    if (getActivity() != null) {
+                        getActivity().getSupportFragmentManager().popBackStack();
+                    }
                 });
     }
 
@@ -717,15 +799,26 @@ public class MakeOfferActivity extends AppCompatActivity {
             }
         }
 
-        // Set amenities
+        // Clear existing amenities first (keep only the Add More chip)
+        for (int i = amenitiesChipGroup.getChildCount() - 1; i >= 0; i--) {
+            View view = amenitiesChipGroup.getChildAt(i);
+            if (view instanceof Chip && view.getId() != R.id.addAmenityChip) {
+                amenitiesChipGroup.removeView(view);
+            }
+        }
+
+        // Now load the amenities from the offer
         if (currentOffer.getAmenities() != null) {
             for (String amenity : currentOffer.getAmenities()) {
-                // Find if this amenity is one of the predefined ones
+                // Check if this is a predefined amenity
                 boolean isPredefined = false;
-                for (int i = 0; i < amenitiesChipGroup.getChildCount(); i++) {
-                    View view = amenitiesChipGroup.getChildAt(i);
-                    if (view instanceof Chip && ((Chip) view).getText().toString().equals(amenity)) {
-                        ((Chip) view).setChecked(true);
+                int[] predefinedChipIds = {R.id.wifiChip, R.id.parkingChip, R.id.poolChip,
+                        R.id.gymChip, R.id.acChip, R.id.furnishedChip};
+
+                for (int chipId : predefinedChipIds) {
+                    Chip chip = amenitiesChipGroup.findViewById(chipId);
+                    if (chip != null && chip.getText().toString().equals(amenity)) {
+                        chip.setChecked(true);
                         isPredefined = true;
                         break;
                     }
@@ -740,51 +833,8 @@ public class MakeOfferActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (isEditMode || !titleInput.getText().toString().trim().isEmpty()) {
-            new MaterialAlertDialogBuilder(this)
-                    .setTitle(R.string.discard_changes)
-                    .setMessage(R.string.discard_changes_message)
-                    .setPositiveButton(R.string.discard, (dialog, which) -> super.onBackPressed())
-                    .setNegativeButton(R.string.cancel, null)
-                    .show();
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-    // Helper method to extract public ID from Cloudinary URL if needed for deletion
-    private String getPublicIdFromUrl(String cloudinaryUrl) {
-        try {
-            // Example URL: https://res.cloudinary.com/your-cloud-name/image/upload/v1234567890/darilink_properties/abcdef.jpg
-            String[] urlParts = cloudinaryUrl.split("/");
-
-            // Get the last two parts (folder/filename)
-            String filename = urlParts[urlParts.length - 1];
-            String folder = urlParts[urlParts.length - 2];
-
-            // Combined folder and filename
-            String filenameWithFolder = folder + "/" + filename;
-
-            // Remove extension
-            int dotIndex = filenameWithFolder.lastIndexOf('.');
-            if (dotIndex != -1) {
-                filenameWithFolder = filenameWithFolder.substring(0, dotIndex);
-            }
-
-            return filenameWithFolder;
-        } catch (Exception e) {
-            Log.e(TAG, "Error extracting public ID: " + e.getMessage());
-            return null;
-        }
+    public void onDestroyView() {
+        super.onDestroyView();
+        // Clean up any resources if needed
     }
 }

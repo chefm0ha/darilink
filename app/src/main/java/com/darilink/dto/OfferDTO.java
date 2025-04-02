@@ -100,4 +100,28 @@ public class OfferDTO {
 
     public long getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(long updatedAt) { this.updatedAt = updatedAt; }
+
+    @Override
+    public String toString() {
+        return "OfferDTO{" +
+                "id='" + id + '\'' +
+                ", title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                ", area=" + area +
+                ", rent=" + rent +
+                ", floorNumber=" + floorNumber +
+                ", numBedrooms=" + numBedrooms +
+                ", numBathrooms=" + numBathrooms +
+                ", agentId='" + agentId + '\'' +
+                ", images=" + images +
+                ", address='" + address + '\'' +
+                ", city='" + city + '\'' +
+                ", country='" + country + '\'' +
+                ", isAvailable=" + isAvailable +
+                ", propertyType='" + propertyType + '\'' +
+                ", amenities=" + amenities +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
+    }
 }

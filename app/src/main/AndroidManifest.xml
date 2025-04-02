@@ -32,11 +32,6 @@
             android:name=".activities.SignUpActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize"/>
-
-        <activity
-            android:name=".activities.MakeOfferActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize"/>
     </application>
 
 </manifest>

@@ -1,6 +1,5 @@
 package com.darilink.fragments;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -14,13 +13,13 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.darilink.R;
-import com.darilink.activities.MakeOfferActivity;
 import com.darilink.adapters.PropertyAdapter;
 import com.darilink.dataAccess.Firebase;
 import com.darilink.dataAccess.Firestore;
@@ -53,6 +52,15 @@ public class MyPropertiesFragment extends Fragment implements PropertyAdapter.Pr
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_my_properties, container, false);
+
+        // Set title in ActionBar
+        if (getActivity() instanceof AppCompatActivity) {
+            AppCompatActivity activity = (AppCompatActivity) getActivity();
+            if (activity.getSupportActionBar() != null) {
+                activity.getSupportActionBar().setTitle(R.string.my_properties);
+            }
+        }
+
         initViews(view);
         setupListeners();
         return view;
@@ -80,8 +88,14 @@ public class MyPropertiesFragment extends Fragment implements PropertyAdapter.Pr
         swipeRefresh.setOnRefreshListener(this::loadProperties);
 
         addPropertyFab.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), MakeOfferActivity.class);
-            startActivity(intent);
+            // Navigate to MakeOfferFragment
+            if (getActivity() != null) {
+                MakeOfferFragment fragment = MakeOfferFragment.newInstance(null);
+                getActivity().getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.content_frame, fragment)
+                        .addToBackStack(null)
+                        .commit();
+            }
         });
 
         searchInput.addTextChangedListener(new TextWatcher() {
@@ -206,16 +220,19 @@ public class MyPropertiesFragment extends Fragment implements PropertyAdapter.Pr
     @Override
     public void onPropertyClick(Offer offer) {
         // Navigate to property details view
-        // Intent intent = new Intent(getActivity(), PropertyDetailsActivity.class);
-        // intent.putExtra("offer_id", offer.getId());
-        // startActivity(intent);
+        // TODO: Implement property details fragment
     }
 
     @Override
     public void onEditClick(Offer offer) {
-        Intent intent = new Intent(getActivity(), MakeOfferActivity.class);
-        intent.putExtra("offer_id", offer.getId());
-        startActivity(intent);
+        // Navigate to MakeOfferFragment with offer ID
+        if (getActivity() != null) {
+            MakeOfferFragment fragment = MakeOfferFragment.newInstance(offer.getId());
+            getActivity().getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.content_frame, fragment)
+                    .addToBackStack(null)
+                    .commit();
+        }
     }
 
     @Override
