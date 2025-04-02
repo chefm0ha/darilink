@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/agentNameText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/contact_agent"
+        android:textColor="@color/deep_umber"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="24dp" />
+
+    <Button
+        android:id="@+id/callButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/call_agent"
+        android:backgroundTint="@color/deep_umber"
+        android:textColor="@color/white"
+        app:icon="@drawable/ic_phone"
+        app:iconTint="@color/white"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/emailButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/email_agent"
+        android:backgroundTint="@color/muted_terracotta"
+        android:textColor="@color/white"
+        app:icon="@drawable/ic_email"
+        app:iconTint="@color/white"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/cancelButton"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/cancel"
+        android:textColor="@color/deep_umber" />
+
+</LinearLayout>

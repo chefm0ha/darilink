@@ -4,14 +4,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.appcompat.widget.Toolbar;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -21,13 +20,15 @@ import com.bumptech.glide.Glide;
 import com.darilink.R;
 import com.darilink.dataAccess.Firebase;
 import com.darilink.dataAccess.Firestore;
+import com.darilink.fragments.FavoritesFragment;
 import com.darilink.fragments.MakeOfferFragment;
 import com.darilink.fragments.MyPropertiesFragment;
+import com.darilink.fragments.MyRequestsFragment;
 import com.darilink.fragments.ProfileFragment;
+import com.darilink.fragments.SearchPropertiesFragment;
 import com.darilink.models.Agent;
 import com.darilink.models.Client;
 import com.google.android.material.navigation.NavigationView;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -37,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private NavigationView navigationView;
     private Firebase firebase;
     private Firestore firestore;
+    private boolean isAgent = false;
 
     // Nav header views
     private CircleImageView navUserImage;
@@ -78,10 +80,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView.setNavigationItemSelectedListener(this);
 
         // Get current user
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        FirebaseUser currentUser = firebase.getCurrentUser();
         if (currentUser != null) {
             String uid = currentUser.getUid();
             checkUserTypeAndUpdateUI(uid);
+        } else {
+            // No user logged in, go to login
+            navigateToLogin();
         }
     }
 
@@ -91,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
                         // User is an agent
+                        isAgent = true;
                         Agent agent = documentSnapshot.toObject(Agent.class);
                         setupAgentNavigation(agent);
                     } else {
@@ -99,11 +105,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 .addOnSuccessListener(clientSnapshot -> {
                                     if (clientSnapshot.exists()) {
                                         // User is a client
+                                        isAgent = false;
                                         Client client = clientSnapshot.toObject(Client.class);
                                         setupClientNavigation(client);
+                                    } else {
+                                        // User not found in either collection
+                                        Toast.makeText(this, "User data not found", Toast.LENGTH_SHORT).show();
+                                        navigateToLogin();
                                     }
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(this, "Error loading user data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    navigateToLogin();
                                 });
                     }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Error loading user data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    navigateToLogin();
                 });
     }
 
@@ -129,12 +148,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         updateNavigationHeader(client.getFirstName(), client.getLastName(),
                 client.getEmail(), client.getProfileImageUrl());
 
-        // TODO: Load default client fragment (like property search)
+        // Load Search Properties fragment by default for clients
+        loadFragment(new SearchPropertiesFragment());
     }
 
     private void updateNavigationHeader(String firstName, String lastName, String email, String profileImageUrl) {
         // Set user name and email
-        navUserName.setText(firstName + " " + lastName);
+        String fullName = (firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "");
+        navUserName.setText(fullName);
         navUserEmail.setText(email);
 
         // Load profile image if available
@@ -167,22 +188,36 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (id == R.id.nav_logout) {
             firebase.signOut();
             // Navigate to login
-            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-            finish();
+            navigateToLogin();
             return true;
         } else if (id == R.id.nav_profile) {
             // Load Profile fragment
             loadFragment(new ProfileFragment());
-        } else if (id == R.id.nav_make_offer) {
-            // Load Make Offer fragment
-            loadFragment(MakeOfferFragment.newInstance(null));
-        } else if (id == R.id.nav_my_properties) {
-            // Load My Properties fragment
-            loadFragment(new MyPropertiesFragment());
+        } else if (isAgent) {
+            // Agent specific navigation
+            if (id == R.id.nav_make_offer) {
+                // Load Make Offer fragment
+                loadFragment(MakeOfferFragment.newInstance(null));
+            } else if (id == R.id.nav_my_properties) {
+                // Load My Properties fragment
+                loadFragment(new MyPropertiesFragment());
+            } else if (id == R.id.nav_requests) {
+                // TODO: Load View Requests fragment for agents
+                Toast.makeText(this, "View Requests coming soon", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            // Client specific navigation
+            if (id == R.id.nav_search) {
+                // Load Search Properties fragment
+                loadFragment(new SearchPropertiesFragment());
+            } else if (id == R.id.nav_favorites) {
+                // Load Favorites fragment
+                loadFragment(new FavoritesFragment());
+            } else if (id == R.id.nav_my_requests) {
+                // Load My Requests fragment
+                loadFragment(new MyRequestsFragment());
+            }
         }
-        // Handle other menu items
 
         drawerLayout.closeDrawer(GravityCompat.START);
         return true;
@@ -192,7 +227,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void loadFragment(Fragment fragment) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.content_frame, fragment);
-        transaction.addToBackStack(null);
         transaction.commit();
     }
 
@@ -207,6 +241,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 super.onBackPressed();
             }
         }
+    }
+
+    // Navigate to login activity
+    private void navigateToLogin() {
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
     }
 
     // Method to refresh navigation header (call this after profile updates)

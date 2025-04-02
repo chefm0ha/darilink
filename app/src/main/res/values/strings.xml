@@ -106,4 +106,82 @@
     <string name="confirm_password">Confirm Password</string>
     <string name="password_requirements">Password must be at least 6 characters</string>
     <string name="rounded_corner_bg">Rounded corner background</string>
+
+    <!-- Property Search and Filters -->
+    <string name="filter">Filter</string>
+    <string name="search_icon">Search icon</string>
+    <string name="clear_search">Clear search</string>
+    <string name="newest_first">Newest First</string>
+    <string name="price_low_to_high">Price ↑</string>
+    <string name="price_high_to_low">Price ↓</string>
+    <string name="largest_area">Area</string>
+    <string name="no_properties_message_client">Try adjusting your filters or search criteria</string>
+    <string name="filter_properties">Filter Properties</string>
+    <string name="price_range">Price Range</string>
+    <string name="price_range_default">Price: $0 - $10,000</string>
+    <string name="bedrooms_range_default">Bedrooms: 0 - 10</string>
+    <string name="apartment">Apartment</string>
+    <string name="house">House</string>
+    <string name="studio">Studio</string>
+    <string name="duplex">Duplex</string>
+    <string name="reset">Reset</string>
+    <string name="apply">Apply</string>
+
+    <!-- Property Detail -->
+    <string name="favorite">Favorite</string>
+    <string name="floor">Floor</string>
+    <string name="add_to_favorites">Add to Favorites</string>
+    <string name="remove_from_favorites">Remove from Favorites</string>
+    <string name="make_request">Make Request</string>
+    <string name="contact_agent">Contact Agent</string>
+    <string name="loading_property_details">Loading property details…</string>
+    <string name="listed_by">Listed By</string>
+    <string name="agent_info_not_available">Agent information not available</string>
+    <string name="no_amenities_listed">No amenities listed</string>
+
+    <!-- Property Request -->
+    <string name="request_property">Request Property</string>
+    <string name="message_to_agent">Message to agent (optional)</string>
+    <string name="rent_proposal">Rent Proposal</string>
+    <string name="employment_status">Employment Status</string>
+    <string name="marital_status">Marital Status</string>
+    <string name="number_of_children">Number of Children</string>
+    <string name="duration_months">Duration (months)</string>
+    <string name="submit_request">Submit Request</string>
+
+    <!-- Contact Agent -->
+    <string name="call_agent">Call Agent</string>
+    <string name="email_agent">Email Agent</string>
+
+    <!-- Favorites -->
+    <string name="my_favorites">My Favorites</string>
+    <string name="no_favorites_added">You haven\'t added any properties to your favorites yet</string>
+    <string name="browse_properties">Browse Properties</string>
+    <string name="no_favorite_list">You haven\'t created a favorites list yet</string>
+    <string name="create_favorite_list">Create Favorites List</string>
+    <string name="create_favorite_list_message">Create a new list to save your favorite properties</string>
+    <string name="create">Create</string>
+
+    <!-- Request Management -->
+    <string name="my_rental_requests">My Rental Requests</string>
+    <string name="no_requests_yet">You haven\'t made any rental requests yet</string>
+    <string name="no_requests_description">When you make a request for a property, it will appear here</string>
+    <string name="request_details">Request Details</string>
+    <string name="your_offer">Your Offer</string>
+    <string name="your_rent_proposal">Your Rent Proposal</string>
+    <string name="property">Property</string>
+    <string name="tap_to_view_details">Tap to view details</string>
+    <string name="property_not_found">Property information not available</string>
+    <string name="view_property">View Property</string>
+    <string name="close">Close</string>
+    <string name="your_message">Your Message</string>
+    <string name="agent_reply">Agent Reply</string>
+    <string name="children">Children</string>
+    <string name="duration">Duration</string>
+    <string name="month">month</string>
+    <string name="months">months</string>
+    <string name="pending">Pending</string>
+    <string name="accepted">Accepted</string>
+    <string name="rejected">Rejected</string>
+    <string name="area">area</string>
 </resources>

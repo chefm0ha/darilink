@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Initial values for price range slider -->
+    <array name="initial_price_range">
+        <item>0</item>
+        <item>10000</item>
+    </array>
+
+    <!-- Initial values for bedroom range slider -->
+    <array name="initial_bedroom_range">
+        <item>0</item>
+        <item>10</item>
+    </array>
+</resources>

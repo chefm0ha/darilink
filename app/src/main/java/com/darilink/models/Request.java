@@ -12,6 +12,7 @@ public class Request {
     private int duration; // in months
     private long createdAt;
     private String status; // pending, accepted, rejected
+    private String agentReply; // Added field for agent's response
 
     // Getters and Setters
     public String getId() { return id; }
@@ -46,4 +47,7 @@ public class Request {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getAgentReply() { return agentReply; }
+    public void setAgentReply(String agentReply) { this.agentReply = agentReply; }
 }
