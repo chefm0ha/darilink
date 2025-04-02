@@ -15,6 +15,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
@@ -52,7 +53,8 @@ public class PropertyDetailFragment extends Fragment {
     private TextView propertyType, agentInfo, postedDate;
     private ChipGroup amenitiesChipGroup;
     private Button makeRequestButton, contactAgentButton, addToFavoritesButton;
-    private LinearLayout progressLayout, contentLayout;
+    private LinearLayout progressLayout;
+    private NestedScrollView contentLayout;
     private ImageView backButton, favoriteIcon;
 
     private Firestore firestore;
@@ -137,7 +139,7 @@ public class PropertyDetailFragment extends Fragment {
 
         // Layouts
         progressLayout = view.findViewById(R.id.progressLayout);
-        contentLayout = view.findViewById(R.id.contentLayout);
+        contentLayout = (NestedScrollView) view.findViewById(R.id.contentLayout);
     }
 
     private void setupListeners() {

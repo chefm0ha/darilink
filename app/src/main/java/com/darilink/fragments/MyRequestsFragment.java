@@ -117,10 +117,11 @@ public class MyRequestsFragment extends Fragment implements RequestAdapter.Reque
                     }
 
                     // Get requests and store offer IDs to load later
+                    List<Request> requests = queryDocumentSnapshots.toObjects(Request.class);
                     List<String> offerIds = new ArrayList<>();
-                    for (Request request : queryDocumentSnapshots.toObjects(Request.class)) {
-                        request.setId(queryDocumentSnapshots.getDocuments()
-                                .get(queryDocumentSnapshots.toObjects(Request.class).indexOf(request)).getId());
+                    for (int i = 0; i < requests.size(); i++) {
+                        Request request = requests.get(i);
+                        request.setId(queryDocumentSnapshots.getDocuments().get(i).getId());
                         myRequests.add(request);
 
                         // Add offer ID to list (avoid duplicates)
