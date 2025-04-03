@@ -19,6 +19,10 @@
             android:icon="@drawable/ic_requests"
             android:title="@string/view_requests" />
         <item
+            android:id="@+id/nav_chats"
+            android:icon="@drawable/ic_chat"
+            android:title="@string/chats" />
+        <item
             android:id="@+id/nav_logout"
             android:icon="@drawable/ic_logout"
             android:title="@string/logout" />

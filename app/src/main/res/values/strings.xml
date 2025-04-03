@@ -247,4 +247,11 @@
         <item quantity="other">Based on %d reviews</item>
     </plurals>
 
+    <!-- Chat Functionality -->
+    <string name="chats">Chats</string>
+    <string name="no_chats_yet">No Chats Yet</string>
+    <string name="no_chats_description">Start a conversation about a property or respond to a request.</string>
+    <string name="type_a_message">Type a message...</string>
+    <string name="chat_with">Chat with %1$s</string>
+    <string name="unread_messages">%1$d Unread Messages</string>
 </resources>

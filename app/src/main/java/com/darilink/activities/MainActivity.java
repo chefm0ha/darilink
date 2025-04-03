@@ -20,6 +20,7 @@ import com.bumptech.glide.Glide;
 import com.darilink.R;
 import com.darilink.dataAccess.Firebase;
 import com.darilink.dataAccess.Firestore;
+import com.darilink.fragments.ChatThreadsFragment;
 import com.darilink.fragments.FavoritesFragment;
 import com.darilink.fragments.MakeOfferFragment;
 import com.darilink.fragments.MyPropertiesFragment;
@@ -217,6 +218,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             } else if (id == R.id.nav_my_requests) {
                 // Load My Requests fragment
                 loadFragment(new MyRequestsFragment());
+            } else if (id == R.id.nav_chats) {
+                // Load Chats fragment
+                loadFragment(new ChatThreadsFragment());
             }
         }
 

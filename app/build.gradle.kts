@@ -56,4 +56,5 @@ dependencies {
     implementation(libs.swiperefreshlayout)
     implementation(libs.glide)
     implementation(libs.cloudinary.android)
+    implementation(libs.firebase.database)
 }
