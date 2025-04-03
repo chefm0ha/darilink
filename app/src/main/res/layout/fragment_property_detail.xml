@@ -371,7 +371,10 @@
                 android:textColor="@color/muted_terracotta"
                 android:textSize="14sp"
                 android:layout_marginTop="4dp"
+                android:layout_marginBottom="48dp"
                 tools:text="Posted on Apr 1, 2023" />
+
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
@@ -380,42 +383,61 @@
         android:id="@+id/bottomActionButtons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:padding="16dp"
         android:background="@color/white"
         android:elevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <Button
-            android:id="@+id/addToFavoritesButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginEnd="8dp"
-            android:text="@string/add_to_favorites"
-            android:backgroundTint="@color/muted_terracotta"
-            android:textColor="@color/white" />
-
+        <!-- First Row -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/addToFavoritesButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="@string/add_to_favorites"
+                android:backgroundTint="@color/muted_terracotta"
+                android:textColor="@color/white" />
 
             <Button
                 android:id="@+id/makeRequestButton"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="@string/make_request"
                 android:backgroundTint="@color/deep_umber"
                 android:textColor="@color/white" />
+        </LinearLayout>
+
+        <!-- Second Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
 
             <Button
                 android:id="@+id/contactAgentButton"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="@string/contact_agent"
+                android:textColor="@color/deep_umber" />
+
+            <Button
+                android:id="@+id/viewReviewsButton"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/view_reviews"
                 android:textColor="@color/deep_umber" />
         </LinearLayout>
     </LinearLayout>

@@ -1,7 +1,6 @@
 package com.darilink.fragments;
 
 import android.content.Intent;
-import android.content.res.ColorStateList;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -16,7 +15,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
@@ -27,6 +25,7 @@ import com.darilink.dataAccess.Firebase;
 import com.darilink.dataAccess.Firestore;
 import com.darilink.models.FavoriteList;
 import com.darilink.models.Offer;
+import com.darilink.utils.PropertyInteractionTracker;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
@@ -54,7 +53,7 @@ public class PropertyDetailFragment extends Fragment {
     private TextView propertyBedrooms, propertyBathrooms, propertyArea, propertyFloor;
     private TextView propertyType, agentInfo, postedDate;
     private ChipGroup amenitiesChipGroup;
-    private Button makeRequestButton, contactAgentButton, addToFavoritesButton;
+    private Button makeRequestButton, contactAgentButton, addToFavoritesButton, viewReviewsButton;
     private LinearLayout progressLayout;
     private NestedScrollView contentLayout;
     private ImageView backButton, favoriteIcon;
@@ -62,6 +61,7 @@ public class PropertyDetailFragment extends Fragment {
     private Firestore firestore;
     private Firebase firebase;
     private FirebaseUser currentUser;
+    private PropertyInteractionTracker interactionTracker;
 
     public static PropertyDetailFragment newInstance(String propertyId) {
         PropertyDetailFragment fragment = new PropertyDetailFragment();
@@ -82,6 +82,9 @@ public class PropertyDetailFragment extends Fragment {
         firestore = Firestore.getInstance();
         firebase = Firebase.getInstance();
         currentUser = firebase.getCurrentUser();
+
+        // Initialize interaction tracker
+        interactionTracker = new PropertyInteractionTracker(requireContext());
     }
 
     @Nullable
@@ -136,12 +139,13 @@ public class PropertyDetailFragment extends Fragment {
         makeRequestButton = view.findViewById(R.id.makeRequestButton);
         contactAgentButton = view.findViewById(R.id.contactAgentButton);
         addToFavoritesButton = view.findViewById(R.id.addToFavoritesButton);
+        viewReviewsButton = view.findViewById(R.id.viewReviewsButton);
         backButton = view.findViewById(R.id.backButton);
         favoriteIcon = view.findViewById(R.id.favoriteIcon);
 
         // Layouts
         progressLayout = view.findViewById(R.id.progressLayout);
-        contentLayout = (NestedScrollView) view.findViewById(R.id.contentLayout);
+        contentLayout = view.findViewById(R.id.contentLayout);
     }
 
     private void setupListeners() {
@@ -157,13 +161,36 @@ public class PropertyDetailFragment extends Fragment {
 
         makeRequestButton.setOnClickListener(v -> {
             if (property != null) {
+                // Track interaction
+                if (propertyId != null) {
+                    interactionTracker.recordPropertyRequest(propertyId);
+                }
+
                 showMakeRequestDialog();
             }
         });
 
         contactAgentButton.setOnClickListener(v -> {
             if (property != null) {
+                // Track interaction
+                if (propertyId != null) {
+                    interactionTracker.recordAgentContact(propertyId);
+                }
+
                 showContactAgentDialog();
+            }
+        });
+
+        viewReviewsButton.setOnClickListener(v -> {
+            if (property != null) {
+                // Navigate to property reviews
+                if (getActivity() != null) {
+                    PropertyReviewsFragment fragment = PropertyReviewsFragment.newInstance(property.getId());
+                    getActivity().getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.content_frame, fragment)
+                            .addToBackStack(null)
+                            .commit();
+                }
             }
         });
     }
@@ -186,6 +213,15 @@ public class PropertyDetailFragment extends Fragment {
                         property.setId(documentSnapshot.getId());
                         displayPropertyDetails();
                         checkIfFavorite();
+
+                        // Track property view
+                        interactionTracker.recordPropertyView(propertyId);
+
+                        // Check if we should prompt for review
+                        if (interactionTracker.shouldPromptForReview(propertyId)) {
+                            // Check if user already has a review
+                            checkExistingReview();
+                        }
                     } else {
                         Toast.makeText(getContext(), "Property not found", Toast.LENGTH_SHORT).show();
                     }
@@ -231,8 +267,6 @@ public class PropertyDetailFragment extends Fragment {
 
         // Setup amenities
         setupAmenities();
-
-        adjustUIBasedOnUserRole();
     }
 
     private void setupImageSlider() {
@@ -305,6 +339,41 @@ public class PropertyDetailFragment extends Fragment {
     private void showLoading(boolean isLoading) {
         progressLayout.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         contentLayout.setVisibility(isLoading ? View.GONE : View.VISIBLE);
+    }
+
+    private void checkExistingReview() {
+        if (currentUser == null) return;
+
+        firestore.getDb().collection("evaluations")
+                .whereEqualTo("clientId", currentUser.getUid())
+                .whereEqualTo("offerId", propertyId)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (queryDocumentSnapshots.isEmpty()) {
+                        // No existing review, prompt user to leave one
+                        promptForReview();
+                    }
+                });
+    }
+
+    private void promptForReview() {
+        if (getContext() == null) return;
+
+        // Wait a bit to show the prompt (let the user explore the property details first)
+        contentLayout.postDelayed(() -> {
+            if (isAdded() && getContext() != null) {
+                new android.app.AlertDialog.Builder(getContext())
+                        .setTitle(R.string.rate_this_property)
+                        .setMessage(R.string.would_you_like_to_review)
+                        .setPositiveButton(R.string.yes, (dialog, which) -> {
+                            // Show review dialog
+                            PropertyReviewFragment reviewDialog = PropertyReviewFragment.newInstance(propertyId);
+                            reviewDialog.show(getParentFragmentManager(), "PropertyReviewDialog");
+                        })
+                        .setNegativeButton(R.string.maybe_later, null)
+                        .show();
+            }
+        }, 3000); // 3 seconds delay
     }
 
     private void checkIfFavorite() {
@@ -437,41 +506,6 @@ public class PropertyDetailFragment extends Fragment {
         // Create the request dialog fragment and show it
         PropertyRequestDialog requestDialog = PropertyRequestDialog.newInstance(property.getId());
         requestDialog.show(getParentFragmentManager(), "PropertyRequestDialog");
-    }
-
-    private void adjustUIBasedOnUserRole() {
-        if (property == null || currentUser == null) return;
-
-        // Check if current user is the property owner
-        boolean isOwner = property.getAgentId().equals(currentUser.getUid());
-
-        if (isOwner) {
-            // This is the agent's own property
-            makeRequestButton.setVisibility(View.GONE);
-            contactAgentButton.setVisibility(View.GONE);
-            addToFavoritesButton.setVisibility(View.GONE);
-
-            // Maybe show edit button instead
-            Button editPropertyButton = new Button(getContext());
-            editPropertyButton.setText(R.string.edit_property);
-            editPropertyButton.setBackgroundTintList(ColorStateList.valueOf(
-                    ContextCompat.getColor(requireContext(), R.color.deep_umber)));
-            editPropertyButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.antique_white));
-
-            LinearLayout buttonsContainer = (LinearLayout) addToFavoritesButton.getParent();
-            buttonsContainer.removeAllViews();
-            buttonsContainer.addView(editPropertyButton);
-
-            editPropertyButton.setOnClickListener(v -> {
-                if (getActivity() != null) {
-                    MakeOfferFragment fragment = MakeOfferFragment.newInstance(property.getId());
-                    getActivity().getSupportFragmentManager().beginTransaction()
-                            .replace(R.id.content_frame, fragment)
-                            .addToBackStack(null)
-                            .commit();
-                }
-            });
-        }
     }
 
     private void showContactAgentDialog() {

@@ -19,10 +19,6 @@
             android:icon="@drawable/ic_requests"
             android:title="@string/view_requests" />
         <item
-            android:id="@+id/nav_settings"
-            android:icon="@drawable/ic_settings"
-            android:title="@string/settings" />
-        <item
             android:id="@+id/nav_logout"
             android:icon="@drawable/ic_logout"
             android:title="@string/logout" />
