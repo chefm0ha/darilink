@@ -1,6 +1,7 @@
 package com.darilink.fragments;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +23,8 @@ import com.darilink.dataAccess.Firestore;
 import com.darilink.models.Offer;
 import com.darilink.models.Request;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,6 +33,7 @@ import java.util.Map;
 
 public class AgentRequestsFragment extends Fragment implements AgentRequestAdapter.AgentRequestListener {
 
+    private static final String TAG = "AgentRequestsFragment";
     private RecyclerView requestsRecyclerView;
     private SwipeRefreshLayout swipeRefresh;
     private LinearLayout emptyStateLayout;
@@ -105,58 +109,39 @@ public class AgentRequestsFragment extends Fragment implements AgentRequestAdapt
         offersMap.clear();
 
         // First, get agent's properties
-        firestore.getOffersByAgent(agentId, new Firestore.FirestoreCallback<List<Offer>>() {
-            @Override
-            public void onSuccess(List<Offer> agentOffers) {
-                if (agentOffers.isEmpty()) {
-                    swipeRefresh.setRefreshing(false);
-                    showEmptyState(true);
-                    return;
-                }
-
-                // Store offers in map for quick lookup
-                for (Offer offer : agentOffers) {
-                    offersMap.put(offer.getId(), offer);
-                }
-
-                // Get requests for these properties
-                List<String> offerIds = new ArrayList<>();
-                for (Offer offer : agentOffers) {
-                    offerIds.add(offer.getId());
-                }
-
-                loadRequestsForOffers(offerIds);
-            }
-
-            @Override
-            public void onFailure(String error) {
-                swipeRefresh.setRefreshing(false);
-                Toast.makeText(getContext(), "Error loading properties: " + error, Toast.LENGTH_SHORT).show();
-                showEmptyState(true);
-            }
-        });
-    }
-
-    private void loadRequestsForOffers(List<String> offerIds) {
-        firestore.getDb().collection("requests")
-                .whereIn("offerId", offerIds)
-                .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
+        firestore.getDb().collection("Offer")
+                .whereEqualTo("agentId", agentId)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    agentRequests.clear();
-                    for (com.google.firebase.firestore.QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                        Request request = document.toObject(Request.class);
-                        request.setId(document.getId());
-                        agentRequests.add(request);
+                    if (queryDocumentSnapshots.isEmpty()) {
+                        swipeRefresh.setRefreshing(false);
+                        showEmptyState(true);
+                        return;
                     }
 
-                    swipeRefresh.setRefreshing(false);
-                    requestAdapter.notifyDataSetChanged();
-                    showEmptyState(agentRequests.isEmpty());
+                    // Build a list of offer IDs and map of offers
+                    List<String> offerIds = new ArrayList<>();
+                    for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                        Offer offer = document.toObject(Offer.class);
+                        if (offer != null) {
+                            offer.setId(document.getId());
+                            offersMap.put(document.getId(), offer);
+                            offerIds.add(document.getId());
+                        }
+                    }
+
+                    if (offerIds.isEmpty()) {
+                        swipeRefresh.setRefreshing(false);
+                        showEmptyState(true);
+                        return;
+                    }
+
+                    loadRequestsForOffers(offerIds);
                 })
                 .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error loading properties", e);
                     swipeRefresh.setRefreshing(false);
-                    Toast.makeText(getContext(), "Error loading requests: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Error loading properties: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     showEmptyState(true);
                 });
     }
@@ -187,6 +172,83 @@ public class AgentRequestsFragment extends Fragment implements AgentRequestAdapt
                     .replace(R.id.content_frame, fragment)
                     .addToBackStack(null)
                     .commit();
+        }
+    }
+
+    private void loadRequestsForOffers(List<String> offerIds) {
+        // Don't proceed if there are no offer IDs
+        if (offerIds.isEmpty()) {
+            swipeRefresh.setRefreshing(false);
+            showEmptyState(true);
+            return;
+        }
+
+        // Process in batches if list is large
+        if (offerIds.size() > 10) {
+            // Firebase limits "in" queries to 10 items
+            List<List<String>> batches = new ArrayList<>();
+            for (int i = 0; i < offerIds.size(); i += 10) {
+                batches.add(offerIds.subList(i, Math.min(i + 10, offerIds.size())));
+            }
+
+            final int[] batchesCompleted = {0};
+            for (List<String> batch : batches) {
+                firestore.getDb().collection("requests")
+                        .whereIn("offerId", batch)
+                        .get()
+                        .addOnSuccessListener(querySnapshot -> {
+                            for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                                Request request = doc.toObject(Request.class);
+                                if (request != null) {
+                                    request.setId(doc.getId());
+                                    agentRequests.add(request);
+                                }
+                            }
+
+                            batchesCompleted[0]++;
+                            if (batchesCompleted[0] == batches.size()) {
+                                // All batches completed
+                                swipeRefresh.setRefreshing(false);
+                                requestAdapter.notifyDataSetChanged();
+                                showEmptyState(agentRequests.isEmpty());
+                            }
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e(TAG, "Error loading requests batch", e);
+                            batchesCompleted[0]++;
+                            if (batchesCompleted[0] == batches.size()) {
+                                // All batches completed
+                                swipeRefresh.setRefreshing(false);
+                                requestAdapter.notifyDataSetChanged();
+                                showEmptyState(agentRequests.isEmpty());
+                            }
+                        });
+            }
+        } else {
+            // Original query for small number of offers
+            firestore.getDb().collection("requests")
+                    .whereIn("offerId", offerIds)
+                    .get()
+                    .addOnSuccessListener(querySnapshot -> {
+                        agentRequests.clear();
+                        for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                            Request request = doc.toObject(Request.class);
+                            if (request != null) {
+                                request.setId(doc.getId());
+                                agentRequests.add(request);
+                            }
+                        }
+
+                        swipeRefresh.setRefreshing(false);
+                        requestAdapter.notifyDataSetChanged();
+                        showEmptyState(agentRequests.isEmpty());
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Error loading requests", e);
+                        swipeRefresh.setRefreshing(false);
+                        Toast.makeText(getContext(), "Error loading requests: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        showEmptyState(true);
+                    });
         }
     }
 }

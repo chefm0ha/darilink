@@ -1,6 +1,7 @@
 package com.darilink.fragments;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -15,6 +16,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
@@ -229,6 +231,8 @@ public class PropertyDetailFragment extends Fragment {
 
         // Setup amenities
         setupAmenities();
+
+        adjustUIBasedOnUserRole();
     }
 
     private void setupImageSlider() {
@@ -433,6 +437,41 @@ public class PropertyDetailFragment extends Fragment {
         // Create the request dialog fragment and show it
         PropertyRequestDialog requestDialog = PropertyRequestDialog.newInstance(property.getId());
         requestDialog.show(getParentFragmentManager(), "PropertyRequestDialog");
+    }
+
+    private void adjustUIBasedOnUserRole() {
+        if (property == null || currentUser == null) return;
+
+        // Check if current user is the property owner
+        boolean isOwner = property.getAgentId().equals(currentUser.getUid());
+
+        if (isOwner) {
+            // This is the agent's own property
+            makeRequestButton.setVisibility(View.GONE);
+            contactAgentButton.setVisibility(View.GONE);
+            addToFavoritesButton.setVisibility(View.GONE);
+
+            // Maybe show edit button instead
+            Button editPropertyButton = new Button(getContext());
+            editPropertyButton.setText(R.string.edit_property);
+            editPropertyButton.setBackgroundTintList(ColorStateList.valueOf(
+                    ContextCompat.getColor(requireContext(), R.color.deep_umber)));
+            editPropertyButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.antique_white));
+
+            LinearLayout buttonsContainer = (LinearLayout) addToFavoritesButton.getParent();
+            buttonsContainer.removeAllViews();
+            buttonsContainer.addView(editPropertyButton);
+
+            editPropertyButton.setOnClickListener(v -> {
+                if (getActivity() != null) {
+                    MakeOfferFragment fragment = MakeOfferFragment.newInstance(property.getId());
+                    getActivity().getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.content_frame, fragment)
+                            .addToBackStack(null)
+                            .commit();
+                }
+            });
+        }
     }
 
     private void showContactAgentDialog() {

@@ -192,4 +192,40 @@
     <string name="accept">Accept</string>
     <string name="reject">Reject</string>
     <string name="agent_response">Agent Response</string>
+
+    <!-- Requests -->
+    <string name="cancel_request">Cancel Request</string>
+    <string name="cancel_request_confirmation">Are you sure you want to cancel this request? This action cannot be undone.</string>
+    <string name="request_cancelled">Request cancelled successfully</string>
+    <string name="error_cancelling_request">Error cancelling request</string>
+    <string name="please_provide_reason">Please provide a reason for rejection</string>
+
+    <!-- Property owner actions -->
+    <string name="edit_property">Edit Property</string>
+    <string name="property_owner_view">Property Owner View</string>
+    <string name="manage_property">Manage Property</string>
+    <string name="add_featured">Add to Featured</string>
+    <string name="remove_featured">Remove from Featured</string>
+
+    <!-- Status messages -->
+    <string name="no_requests_found">No requests found</string>
+    <string name="loading_requests">Loading requests…</string>
+    <string name="request_updated">Request updated successfully</string>
+    <string name="error_updating_request">Error updating request</string>
+
+    <!-- Confirmations -->
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="confirm">Confirm</string>
+
+    <!-- User role related -->
+    <string name="you_are_the_owner">You are the owner of this property</string>
+    <string name="request_for_your_property">Request for your property</string>
+    <string name="client_request_details">Client Request Details</string>
+    <string name="client_rent_proposal">Client\'s Rent Proposal</string>
+    <string name="original_rent">Original Listed Rent</string>
+    <string name="proposal_difference">Difference from Listing</string>
+    <string name="client_message">Client Message</string>
+
+
 </resources>

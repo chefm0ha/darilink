@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.darilink.R;
+import com.darilink.dataAccess.Firebase;
+import com.darilink.dataAccess.Firestore;
 import com.darilink.models.Offer;
 import com.google.android.material.button.MaterialButton;
 
@@ -27,12 +29,15 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
     private final Context context;
     private final List<Offer> properties;
     private final PropertyListener listener;
+    private final Firestore firestore;
 
     public PropertyAdapter(Context context, List<Offer> properties, PropertyListener listener) {
         this.context = context;
         this.properties = properties;
         this.listener = listener;
+        this.firestore = Firestore.getInstance();
     }
+
     @NonNull
     @Override
     public PropertyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -92,8 +97,18 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
         holder.editButton.setOnClickListener(v -> listener.onEditClick(property));
         holder.deleteButton.setOnClickListener(v -> listener.onDeleteClick(property));
 
-        // TODO: Load requests count when implementation is ready
-        holder.requestsCount.setText(context.getString(R.string.requests_count, 0));
+        // Load request count
+        firestore.getDb().collection("requests")
+                .whereEqualTo("offerId", property.getId())
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    int requestCount = querySnapshot.size();
+                    holder.requestsCount.setText(context.getString(R.string.requests_count, requestCount));
+                })
+                .addOnFailureListener(e -> {
+                    // In case of error, default to 0
+                    holder.requestsCount.setText(context.getString(R.string.requests_count, 0));
+                });
     }
 
     @Override

@@ -119,6 +119,7 @@
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
+            <!-- Modified GridLayout with fixed constraints -->
             <GridLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -128,8 +129,9 @@
                 android:layout_marginBottom="16dp">
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:text="@string/employment_status"
                     android:textColor="@color/deep_umber"
                     android:textSize="14sp"
@@ -138,16 +140,18 @@
 
                 <TextView
                     android:id="@+id/employmentStatus"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:textColor="@color/muted_terracotta"
                     android:textSize="14sp"
                     android:layout_marginBottom="4dp"
                     tools:text="Employed" />
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:text="@string/marital_status"
                     android:textColor="@color/deep_umber"
                     android:textSize="14sp"
@@ -156,16 +160,18 @@
 
                 <TextView
                     android:id="@+id/maritalStatus"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:textColor="@color/muted_terracotta"
                     android:textSize="14sp"
                     android:layout_marginBottom="4dp"
                     tools:text="Married" />
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:text="@string/children"
                     android:textColor="@color/deep_umber"
                     android:textSize="14sp"
@@ -174,16 +180,18 @@
 
                 <TextView
                     android:id="@+id/numChildren"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:textColor="@color/muted_terracotta"
                     android:textSize="14sp"
                     android:layout_marginBottom="4dp"
                     tools:text="2" />
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:text="@string/duration"
                     android:textColor="@color/deep_umber"
                     android:textSize="14sp"
@@ -191,8 +199,9 @@
 
                 <TextView
                     android:id="@+id/duration"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
                     android:textColor="@color/muted_terracotta"
                     android:textSize="14sp"
                     tools:text="12 months" />
@@ -259,10 +268,12 @@
     <LinearLayout
         android:id="@+id/buttonContainer"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="103dp"
+        android:layout_marginTop="550dp"
         android:orientation="horizontal"
         android:padding="16dp"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dialogTitle">
 
         <Button
             android:id="@+id/closeButton"
@@ -278,28 +289,28 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/view_property"
             android:backgroundTint="@color/muted_terracotta"
+            android:text="@string/view_property"
             android:textColor="@color/white" />
 
         <Button
             android:id="@+id/acceptRequestButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:text="@string/accept"
             android:backgroundTint="@color/deep_umber"
-            android:textColor="@color/white"
-            android:layout_marginStart="8dp" />
+            android:text="@string/accept"
+            android:textColor="@color/white" />
 
         <Button
             android:id="@+id/rejectRequestButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:text="@string/reject"
             android:backgroundTint="#D32F2F"
-            android:textColor="@color/white"
-            android:layout_marginStart="8dp" />
+            android:text="@string/reject"
+            android:textColor="@color/white" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

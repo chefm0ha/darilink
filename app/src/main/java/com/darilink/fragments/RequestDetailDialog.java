@@ -8,6 +8,7 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,6 +19,8 @@ import com.darilink.dataAccess.Firebase;
 import com.darilink.dataAccess.Firestore;
 import com.darilink.models.Offer;
 import com.darilink.models.Request;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.text.NumberFormat;
@@ -29,6 +32,7 @@ import java.util.Locale;
 public class RequestDetailDialog extends DialogFragment {
 
     private static final String ARG_REQUEST_ID = "request_id";
+    private static final String TAG = "RequestDetailDialog";
 
     private String requestId;
     private Request request;
@@ -38,7 +42,7 @@ public class RequestDetailDialog extends DialogFragment {
     private TextView statusBadge, requestDate, propertyTitle;
     private TextView rentProposal, employmentStatus, maritalStatus, numChildren, duration;
     private TextView message, replyFromAgent;
-    private Button closeButton, viewPropertyButton;
+    private Button closeButton, viewPropertyButton, cancelRequestButton;
     private ProgressBar progressBar;
     private View contentLayout, replyContainer;
 
@@ -81,6 +85,10 @@ public class RequestDetailDialog extends DialogFragment {
 
         initViews(view);
         setupListeners();
+
+        // Initially hide content and show loading
+        showLoading(true);
+
         loadRequestDetails();
     }
 
@@ -97,6 +105,7 @@ public class RequestDetailDialog extends DialogFragment {
         replyFromAgent = view.findViewById(R.id.replyFromAgent);
         closeButton = view.findViewById(R.id.closeButton);
         viewPropertyButton = view.findViewById(R.id.viewPropertyButton);
+        cancelRequestButton = view.findViewById(R.id.cancelRequestButton);
         progressBar = view.findViewById(R.id.progressBar);
         contentLayout = view.findViewById(R.id.contentLayout);
         replyContainer = view.findViewById(R.id.replyContainer);
@@ -110,6 +119,16 @@ public class RequestDetailDialog extends DialogFragment {
                 navigateToPropertyDetail();
                 dismiss();
             }
+        });
+
+        cancelRequestButton.setOnClickListener(v -> {
+            // Confirm cancellation
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(R.string.cancel_request)
+                    .setMessage(R.string.cancel_request_confirmation)
+                    .setPositiveButton(R.string.yes, (dialog, which) -> cancelRequest())
+                    .setNegativeButton(R.string.no, null)
+                    .show();
         });
     }
 
@@ -190,7 +209,7 @@ public class RequestDetailDialog extends DialogFragment {
         }
 
         // Format rent proposal with currency
-        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.US);
+        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
         currencyFormat.setCurrency(Currency.getInstance("USD"));
         rentProposal.setText(currencyFormat.format(request.getRentProposal()));
 
@@ -219,11 +238,45 @@ public class RequestDetailDialog extends DialogFragment {
         } else {
             replyContainer.setVisibility(View.GONE);
         }
+
+        // Only show cancel button for pending requests
+        cancelRequestButton.setVisibility(
+                "pending".equalsIgnoreCase(request.getStatus()) ? View.VISIBLE : View.GONE);
+    }
+
+    private void cancelRequest() {
+        if (request == null) return;
+
+        // Show loading
+        progressBar.setVisibility(View.VISIBLE);
+        contentLayout.setVisibility(View.GONE);
+
+        // Delete the request from Firestore
+        firestore.getDb().collection("requests").document(request.getId())
+                .delete()
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(getContext(), R.string.request_cancelled, Toast.LENGTH_SHORT).show();
+                    dismiss();
+                })
+                .addOnFailureListener(e -> {
+                    // Hide loading
+                    progressBar.setVisibility(View.GONE);
+                    contentLayout.setVisibility(View.VISIBLE);
+
+                    Toast.makeText(getContext(),
+                            getString(R.string.error_cancelling_request) + ": " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                });
     }
 
     private void showLoading(boolean isLoading) {
-        progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-        contentLayout.setVisibility(isLoading ? View.GONE : View.VISIBLE);
+        if (isLoading) {
+            progressBar.setVisibility(View.VISIBLE);
+            contentLayout.setVisibility(View.GONE);
+        } else {
+            progressBar.setVisibility(View.GONE);
+            contentLayout.setVisibility(View.VISIBLE);
+        }
     }
 
     private String getStatusDisplayText(String status) {

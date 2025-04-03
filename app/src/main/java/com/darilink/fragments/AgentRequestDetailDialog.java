@@ -2,6 +2,7 @@ package com.darilink.fragments;
 
 import android.app.Dialog;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +15,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.DialogFragment;
 
@@ -36,6 +36,7 @@ import java.util.Locale;
 public class AgentRequestDetailDialog extends DialogFragment {
 
     private static final String ARG_REQUEST_ID = "request_id";
+    private static final String TAG = "AgentRequestDetailDialog";
 
     private String requestId;
     private Request request;
@@ -96,6 +97,10 @@ public class AgentRequestDetailDialog extends DialogFragment {
 
         initViews(view);
         setupListeners();
+
+        // Initially hide content and show progress
+        showLoading(true);
+
         loadRequestDetails();
     }
 
@@ -124,7 +129,7 @@ public class AgentRequestDetailDialog extends DialogFragment {
 
         // Loading
         progressBar = view.findViewById(R.id.progressBar);
-        contentLayout = (NestedScrollView) view.findViewById(R.id.contentLayout);
+        contentLayout = view.findViewById(R.id.contentLayout);
     }
 
     private void setupListeners() {
@@ -144,13 +149,18 @@ public class AgentRequestDetailDialog extends DialogFragment {
 
         rejectRequestButton.setOnClickListener(v -> {
             String agentReply = agentReplyInput.getText().toString().trim();
+
+            if (agentReply.isEmpty()) {
+                agentReplyInput.setError("Please provide a reason for rejection");
+                agentReplyInput.requestFocus();
+                return;
+            }
+
             updateRequestStatus("rejected", agentReply);
         });
     }
 
     private void loadRequestDetails() {
-        showLoading(true);
-
         if (requestId == null || requestId.isEmpty()) {
             Toast.makeText(getContext(), "Request ID not found", Toast.LENGTH_SHORT).show();
             dismiss();
@@ -255,27 +265,34 @@ public class AgentRequestDetailDialog extends DialogFragment {
     private void updateActionButtonsVisibility(String status) {
         // Hide/show action buttons based on request status
         boolean isPending = "pending".equals(status);
-        acceptRequestButton.setVisibility(isPending ? View.VISIBLE : View.GONE);
-        rejectRequestButton.setVisibility(isPending ? View.VISIBLE : View.GONE);
-        agentReplyContainer.setVisibility(isPending ? View.VISIBLE : View.GONE);
 
-        // If not pending, show the existing reply (if any)
-        if (!isPending && request != null && request.getAgentReply() != null) {
-            agentReplyLabel.setText(R.string.agent_response);
-            agentReplyInput.setText(request.getAgentReply());
-            agentReplyInput.setEnabled(false);
+        if (isPending) {
+            // Show pending state UI
+            acceptRequestButton.setVisibility(View.VISIBLE);
+            rejectRequestButton.setVisibility(View.VISIBLE);
             agentReplyContainer.setVisibility(View.VISIBLE);
+            agentReplyLabel.setText(R.string.your_response);
+            agentReplyInput.setEnabled(true);
+            agentReplyInput.setHint(R.string.response_to_request);
+        } else {
+            // Show completed state UI
+            acceptRequestButton.setVisibility(View.GONE);
+            rejectRequestButton.setVisibility(View.GONE);
+
+            // If there's a reply, show it
+            if (request != null && request.getAgentReply() != null && !request.getAgentReply().isEmpty()) {
+                agentReplyContainer.setVisibility(View.VISIBLE);
+                agentReplyLabel.setText(R.string.agent_response);
+                agentReplyInput.setText(request.getAgentReply());
+                agentReplyInput.setEnabled(false);
+            } else {
+                agentReplyContainer.setVisibility(View.GONE);
+            }
         }
     }
 
     private void updateRequestStatus(String newStatus, String agentReply) {
         if (request == null) return;
-
-        // Validate reply for non-accepted statuses
-        if (!"accepted".equals(newStatus) && agentReply.isEmpty()) {
-            Toast.makeText(getContext(), "Please provide a reason for rejection", Toast.LENGTH_SHORT).show();
-            return;
-        }
 
         // Show loading
         progressBar.setVisibility(View.VISIBLE);
@@ -322,8 +339,13 @@ public class AgentRequestDetailDialog extends DialogFragment {
     }
 
     private void showLoading(boolean isLoading) {
-        progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-        contentLayout.setVisibility(isLoading ? View.GONE : View.VISIBLE);
+        if (isLoading) {
+            progressBar.setVisibility(View.VISIBLE);
+            contentLayout.setVisibility(View.GONE);
+        } else {
+            progressBar.setVisibility(View.GONE);
+            contentLayout.setVisibility(View.VISIBLE);
+        }
     }
 
     private String getStatusDisplayText(String status) {
