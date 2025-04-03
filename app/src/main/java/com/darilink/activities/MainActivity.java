@@ -26,6 +26,7 @@ import com.darilink.fragments.MyPropertiesFragment;
 import com.darilink.fragments.MyRequestsFragment;
 import com.darilink.fragments.ProfileFragment;
 import com.darilink.fragments.SearchPropertiesFragment;
+import com.darilink.fragments.AgentRequestsFragment;
 import com.darilink.models.Agent;
 import com.darilink.models.Client;
 import com.google.android.material.navigation.NavigationView;
@@ -202,8 +203,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 // Load My Properties fragment
                 loadFragment(new MyPropertiesFragment());
             } else if (id == R.id.nav_requests) {
-                // TODO: Load View Requests fragment for agents
-                Toast.makeText(this, "View Requests coming soon", Toast.LENGTH_SHORT).show();
+                // Load Agent Requests fragment
+                loadFragment(new AgentRequestsFragment());
             }
         } else {
             // Client specific navigation
