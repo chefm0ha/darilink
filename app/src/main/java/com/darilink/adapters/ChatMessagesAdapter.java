@@ -8,18 +8,18 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.darilink.R;
-import com.darilink.models.ChatThread;
 import com.darilink.models.ChatMessage;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ChatMessagesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final int VIEW_TYPE_SENT = 1;
@@ -76,6 +76,8 @@ public class ChatMessagesAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                         .placeholder(R.drawable.default_profile)
                         .circleCrop()
                         .into(receivedHolder.senderProfileImage);
+            } else {
+                receivedHolder.senderProfileImage.setImageResource(R.drawable.default_profile);
             }
         }
     }
@@ -102,7 +104,7 @@ public class ChatMessagesAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
     static class ReceivedMessageViewHolder extends RecyclerView.ViewHolder {
         TextView messageText, senderNameText, timestampText;
-        ImageView senderProfileImage;
+        CircleImageView senderProfileImage;
 
         ReceivedMessageViewHolder(@NonNull View itemView) {
             super(itemView);

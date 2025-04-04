@@ -4,32 +4,36 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.darilink.R;
+import com.darilink.dataAccess.Firebase;
+import com.darilink.dataAccess.Firestore;
 import com.darilink.models.ChatThread;
-import com.darilink.models.ChatMessage;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class ChatThreadAdapter extends RecyclerView.Adapter<ChatThreadAdapter.ChatThreadViewHolder> {
     private final Context context;
     private final List<ChatThread> chatThreads;
     private final ChatThreadListener listener;
+    private final FirebaseUser currentUser;
 
     public ChatThreadAdapter(Context context, List<ChatThread> chatThreads, ChatThreadListener listener) {
         this.context = context;
         this.chatThreads = chatThreads;
         this.listener = listener;
+        this.currentUser = Firebase.getInstance().getCurrentUser();
     }
 
     @NonNull
@@ -43,9 +47,27 @@ public class ChatThreadAdapter extends RecyclerView.Adapter<ChatThreadAdapter.Ch
     public void onBindViewHolder(@NonNull ChatThreadViewHolder holder, int position) {
         ChatThread chatThread = chatThreads.get(position);
 
-        // Determine which user's info to show (client or agent)
-        String profileImage = chatThread.getAgentProfileImage();
-        String userName = chatThread.getAgentName();
+        // Determine if current user is the agent for this specific thread
+        boolean thisUserIsAgent = currentUser != null &&
+                chatThread.getAgentId() != null &&
+                chatThread.getAgentId().equals(currentUser.getUid());
+
+        // Determine which user's info to show (the other person in the chat)
+        String profileImage;
+        String userName;
+        int unreadCount;
+
+        if (thisUserIsAgent) {
+            // Current user is agent, show client info
+            profileImage = chatThread.getClientProfileImage();
+            userName = chatThread.getClientName();
+            unreadCount = chatThread.getAgentUnreadCount();
+        } else {
+            // Current user is client, show agent info
+            profileImage = chatThread.getAgentProfileImage();
+            userName = chatThread.getAgentName();
+            unreadCount = chatThread.getClientUnreadCount();
+        }
 
         // Set user name
         holder.userNameText.setText(userName);
@@ -53,13 +75,15 @@ public class ChatThreadAdapter extends RecyclerView.Adapter<ChatThreadAdapter.Ch
         // Set last message
         holder.lastMessageText.setText(chatThread.getLastMessage());
 
-        // Set profile image
+        // Load profile image
         if (profileImage != null && !profileImage.isEmpty()) {
             Glide.with(context)
                     .load(profileImage)
                     .placeholder(R.drawable.default_profile)
                     .circleCrop()
                     .into(holder.profileImage);
+        } else {
+            holder.profileImage.setImageResource(R.drawable.default_profile);
         }
 
         // Set timestamp
@@ -67,9 +91,9 @@ public class ChatThreadAdapter extends RecyclerView.Adapter<ChatThreadAdapter.Ch
         holder.timestampText.setText(dateFormat.format(new Date(chatThread.getLastMessageTimestamp())));
 
         // Set unread count
-        if (chatThread.getUnreadCount() > 0) {
+        if (unreadCount > 0) {
             holder.unreadCountText.setVisibility(View.VISIBLE);
-            holder.unreadCountText.setText(String.valueOf(chatThread.getUnreadCount()));
+            holder.unreadCountText.setText(String.valueOf(unreadCount));
         } else {
             holder.unreadCountText.setVisibility(View.GONE);
         }
@@ -84,7 +108,7 @@ public class ChatThreadAdapter extends RecyclerView.Adapter<ChatThreadAdapter.Ch
     }
 
     static class ChatThreadViewHolder extends RecyclerView.ViewHolder {
-        ImageView profileImage;
+        CircleImageView profileImage;
         TextView userNameText, lastMessageText, timestampText, unreadCountText;
 
         ChatThreadViewHolder(@NonNull View itemView) {
@@ -101,4 +125,3 @@ public class ChatThreadAdapter extends RecyclerView.Adapter<ChatThreadAdapter.Ch
         void onChatThreadClick(ChatThread chatThread);
     }
 }
-

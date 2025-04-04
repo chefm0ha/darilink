@@ -3,6 +3,7 @@ package com.darilink.fragments;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +26,7 @@ import com.darilink.dataAccess.Firebase;
 import com.darilink.dataAccess.Firestore;
 import com.darilink.models.FavoriteList;
 import com.darilink.models.Offer;
+import com.darilink.dataAccess.ChatService;
 import com.darilink.utils.PropertyInteractionTracker;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.chip.Chip;
@@ -171,13 +173,73 @@ public class PropertyDetailFragment extends Fragment {
         });
 
         contactAgentButton.setOnClickListener(v -> {
+            Log.d("PropertyDetailFragment", "Contact agent button clicked");
             if (property != null) {
                 // Track interaction
                 if (propertyId != null) {
                     interactionTracker.recordAgentContact(propertyId);
                 }
 
-                showContactAgentDialog();
+                // Show options dialog for contact methods
+                BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+                View dialogView = getLayoutInflater().inflate(R.layout.dialog_contact_agent, null);
+                dialog.setContentView(dialogView);
+
+                TextView agentNameText = dialogView.findViewById(R.id.agentNameText);
+                Button callButton = dialogView.findViewById(R.id.callButton);
+                Button chatButton = dialogView.findViewById(R.id.chatButton); // This is important - make sure this ID exists in your XML
+                Button cancelButton = dialogView.findViewById(R.id.cancelButton);
+
+                // Debug to make sure all buttons are found
+                Log.d("PropertyDetailFragment", "Call button null? " + (callButton == null));
+                Log.d("PropertyDetailFragment", "Chat button null? " + (chatButton == null));
+
+                // Load agent details
+                firestore.getDb().collection("agents").document(property.getAgentId())
+                        .get()
+                        .addOnSuccessListener(documentSnapshot -> {
+                            if (documentSnapshot.exists()) {
+                                String firstName = documentSnapshot.getString("firstName");
+                                String lastName = documentSnapshot.getString("lastName");
+                                String phone = documentSnapshot.getString("phone");
+                                String email = documentSnapshot.getString("email");
+
+                                // Set agent name
+                                if (firstName != null && lastName != null) {
+                                    agentNameText.setText(String.format("Contact %s %s", firstName, lastName));
+                                }
+
+                                // Setup call button
+                                callButton.setOnClickListener(view -> {
+                                    if (phone != null && !phone.isEmpty()) {
+                                        Intent intent = new Intent(Intent.ACTION_DIAL);
+                                        intent.setData(Uri.parse("tel:" + phone));
+                                        startActivity(intent);
+                                        dialog.dismiss();
+                                    } else {
+                                        Toast.makeText(getContext(), "Phone number not available",
+                                                Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+
+
+                                // Setup chat button with debug logs
+                                if (chatButton != null) {
+                                    chatButton.setOnClickListener(view -> {
+                                        Log.d("PropertyDetailFragment", "Chat button clicked");
+                                        dialog.dismiss();
+                                        startChat();
+                                    });
+                                } else {
+                                    Log.e("PropertyDetailFragment", "Chat button not found in layout");
+                                }
+                            }
+                        });
+
+                // Cancel button
+                cancelButton.setOnClickListener(view -> dialog.dismiss());
+
+                dialog.show();
             }
         });
 
@@ -508,6 +570,120 @@ public class PropertyDetailFragment extends Fragment {
         requestDialog.show(getParentFragmentManager(), "PropertyRequestDialog");
     }
 
+    private void startChat() {
+        Log.d("PropertyDetailFragment", "startChat method called");
+
+        try {
+            if (currentUser == null) {
+                Toast.makeText(getContext(), "You must be logged in to chat", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (property == null || property.getAgentId() == null) {
+                Toast.makeText(getContext(), "Cannot start chat: missing property or agent info", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Show loading indicator
+            Toast.makeText(getContext(), "Starting chat...", Toast.LENGTH_SHORT).show();
+            Log.d("PropertyDetailFragment", "Starting chat with agent: " + property.getAgentId());
+
+            // Get client details
+            firestore.getDb().collection("clients").document(currentUser.getUid())
+                    .get()
+                    .addOnSuccessListener(clientDoc -> {
+                        if (!clientDoc.exists()) {
+                            // Not a client
+                            Toast.makeText(getContext(), "Only clients can start chats", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        String firstName = clientDoc.getString("firstName");
+                        String lastName = clientDoc.getString("lastName");
+
+                        if (firstName == null) firstName = "";
+                        if (lastName == null) lastName = "";
+
+                        String clientName = firstName + " " + lastName;
+                        String clientProfileImage = clientDoc.getString("profileImageUrl");
+
+                        Log.d("PropertyDetailFragment", "Client info retrieved: " + clientName);
+
+                        // Get agent details
+                        firestore.getDb().collection("agents").document(property.getAgentId())
+                                .get()
+                                .addOnSuccessListener(agentDoc -> {
+                                    if (!agentDoc.exists()) {
+                                        Toast.makeText(getContext(), "Agent information not available", Toast.LENGTH_SHORT).show();
+                                        return;
+                                    }
+
+                                    String agentFirstName = agentDoc.getString("firstName");
+                                    String agentLastName = agentDoc.getString("lastName");
+
+                                    if (agentFirstName == null) agentFirstName = "";
+                                    if (agentLastName == null) agentLastName = "";
+
+                                    String agentName = agentFirstName + " " + agentLastName;
+                                    String agentProfileImage = agentDoc.getString("profileImageUrl");
+
+                                    Log.d("PropertyDetailFragment", "Agent info retrieved: " + agentName);
+
+                                    // Initialize ChatService if needed
+                                    ChatService chatService = ChatService.getInstance();
+
+                                    // Start chat using ChatService
+                                    chatService.startChatFromProperty(
+                                            property.getId(),
+                                            currentUser.getUid(),
+                                            property.getAgentId(),
+                                            clientName,
+                                            agentName,
+                                            clientProfileImage,
+                                            agentProfileImage,
+                                            new ChatService.ChatServiceCallback<String>() {
+                                                @Override
+                                                public void onSuccess(String threadId) {
+                                                    Log.d("PropertyDetailFragment", "Chat thread created with ID: " + threadId);
+
+                                                    // Navigate to chat detail screen
+                                                    if (getActivity() != null) {
+                                                        ChatDetailFragment chatDetailFragment = ChatDetailFragment.newInstance(
+                                                                threadId,
+                                                                property.getAgentId(),
+                                                                agentName,
+                                                                agentProfileImage
+                                                        );
+
+                                                        getActivity().getSupportFragmentManager().beginTransaction()
+                                                                .replace(R.id.content_frame, chatDetailFragment)
+                                                                .addToBackStack(null)
+                                                                .commit();
+                                                    }
+                                                }
+
+                                                @Override
+                                                public void onFailure(String error) {
+                                                    Log.e("PropertyDetailFragment", "Failed to start chat: " + error);
+                                                    Toast.makeText(getContext(), "Failed to start chat: " + error, Toast.LENGTH_SHORT).show();
+                                                }
+                                            });
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e("PropertyDetailFragment", "Error getting agent details: " + e.getMessage());
+                                    Toast.makeText(getContext(), "Error getting agent details: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                });
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e("PropertyDetailFragment", "Error getting user details: " + e.getMessage());
+                        Toast.makeText(getContext(), "Error getting user details: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+        } catch (Exception e) {
+            Log.e("PropertyDetailFragment", "Exception in startChat: " + e.getMessage(), e);
+            Toast.makeText(getContext(), "Error starting chat: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void showContactAgentDialog() {
         // Create and show a bottom sheet dialog for contacting the agent
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
@@ -516,7 +692,6 @@ public class PropertyDetailFragment extends Fragment {
 
         TextView agentNameText = dialogView.findViewById(R.id.agentNameText);
         Button callButton = dialogView.findViewById(R.id.callButton);
-        Button emailButton = dialogView.findViewById(R.id.emailButton);
         Button cancelButton = dialogView.findViewById(R.id.cancelButton);
 
         // Load agent details
@@ -543,21 +718,6 @@ public class PropertyDetailFragment extends Fragment {
                                 dialog.dismiss();
                             } else {
                                 Toast.makeText(getContext(), "Phone number not available",
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                        });
-
-                        // Setup email button
-                        emailButton.setOnClickListener(v -> {
-                            if (email != null && !email.isEmpty()) {
-                                Intent intent = new Intent(Intent.ACTION_SENDTO);
-                                intent.setData(Uri.parse("mailto:" + email));
-                                intent.putExtra(Intent.EXTRA_SUBJECT,
-                                        "Inquiry about property: " + property.getTitle());
-                                startActivity(intent);
-                                dialog.dismiss();
-                            } else {
-                                Toast.makeText(getContext(), "Email not available",
                                         Toast.LENGTH_SHORT).show();
                             }
                         });

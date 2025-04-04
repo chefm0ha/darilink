@@ -19,20 +19,18 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.darilink.R;
-import com.darilink.adapters.ChatThreadAdapter;
 import com.darilink.adapters.ChatMessagesAdapter;
 import com.darilink.dataAccess.ChatService;
 import com.darilink.dataAccess.Firebase;
 import com.darilink.dataAccess.Firestore;
 import com.darilink.models.ChatMessage;
 import com.darilink.models.ChatThread;
-import com.darilink.models.Offer;
-import com.darilink.models.User;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ChatDetailFragment extends Fragment {
     private static final String ARG_THREAD_ID = "thread_id";
@@ -47,16 +45,21 @@ public class ChatDetailFragment extends Fragment {
 
     private RecyclerView messagesRecyclerView;
     private EditText messageInput;
-    private ImageView sendButton, receiverProfileView;
+    private ImageView sendButton;
+    private CircleImageView receiverProfileImageView;
     private TextView receiverNameText;
 
     private ChatService chatService;
     private Firebase firebase;
     private Firestore firestore;
     private FirebaseUser currentUser;
+    private String currentUserName;
+    private String currentUserProfileImage;
+    private TextView propertyInfoText;
 
     private ChatMessagesAdapter messagesAdapter;
     private List<ChatMessage> messages = new ArrayList<>();
+    private boolean isInitialLoad = true;
 
     public static ChatDetailFragment newInstance(String threadId, String receiverId,
                                                  String receiverName, String receiverProfileImage) {
@@ -84,6 +87,9 @@ public class ChatDetailFragment extends Fragment {
         firebase = Firebase.getInstance();
         firestore = Firestore.getInstance();
         currentUser = firebase.getCurrentUser();
+
+        // Fetch current user details for messages
+        loadCurrentUserInfo();
     }
 
     @Nullable
@@ -91,26 +97,77 @@ public class ChatDetailFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_chat_detail, container, false);
 
-        // Set title to receiver's name
+        // Set up ActionBar
         if (getActivity() instanceof AppCompatActivity) {
             AppCompatActivity activity = (AppCompatActivity) getActivity();
             if (activity.getSupportActionBar() != null) {
-                activity.getSupportActionBar().setTitle(receiverName);
+                activity.getSupportActionBar().setTitle("");
+                activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             }
         }
 
         initializeViews(view);
         setupListeners();
-        loadChatMessages();
+        setupRecyclerView();
+        setupRealtimeMessagesListener();
+
+        // Mark messages as read when this chat is opened
+        markMessagesAsRead();
+
         return view;
     }
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        initializeViews(view);
+        setupListeners();
+        setupRecyclerView();
+        setupRealtimeMessagesListener();
+
+        // Load property info to show context
+        loadPropertyInfo();
+
+        // Mark messages as read when this chat is opened
+        markMessagesAsRead();
+    }
+
+    private void loadPropertyInfo() {
+        if (threadId == null) return;
+
+        chatService.getThreadById(threadId, new ChatService.ChatServiceCallback<ChatThread>() {
+            @Override
+            public void onSuccess(ChatThread thread) {
+                if (thread.getPropertyId() != null && propertyInfoText != null) {
+                    // Load property info
+                    firestore.getDb().collection("Offer").document(thread.getPropertyId())
+                            .get()
+                            .addOnSuccessListener(documentSnapshot -> {
+                                if (documentSnapshot.exists()) {
+                                    String propertyTitle = documentSnapshot.getString("title");
+                                    if (propertyTitle != null && !propertyTitle.isEmpty()) {
+                                        propertyInfoText.setText("Re: " + propertyTitle);
+                                        propertyInfoText.setVisibility(View.VISIBLE);
+                                    }
+                                }
+                            });
+                }
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Log.e("ChatDetailFragment", "Failed to get thread info for property: " + error);
+            }
+        });
+    }
     private void initializeViews(View view) {
         messagesRecyclerView = view.findViewById(R.id.messagesRecyclerView);
         messageInput = view.findViewById(R.id.messageInput);
         sendButton = view.findViewById(R.id.sendButton);
-        receiverProfileView = view.findViewById(R.id.receiverProfileImage);
+        receiverProfileImageView = view.findViewById(R.id.receiverProfileImage);
         receiverNameText = view.findViewById(R.id.receiverNameText);
+        propertyInfoText = view.findViewById(R.id.propertyInfoText); // Add this to your layout
 
         // Set receiver info
         receiverNameText.setText(receiverName);
@@ -119,10 +176,11 @@ public class ChatDetailFragment extends Fragment {
                     .load(receiverProfileImage)
                     .placeholder(R.drawable.default_profile)
                     .circleCrop()
-                    .into(receiverProfileView);
+                    .into(receiverProfileImageView);
         }
+    }
 
-        // Setup messages adapter
+    private void setupRecyclerView() {
         messagesAdapter = new ChatMessagesAdapter(requireContext(), messages, currentUser.getUid());
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
         layoutManager.setStackFromEnd(true);
@@ -139,96 +197,178 @@ public class ChatDetailFragment extends Fragment {
         });
     }
 
-    private void loadChatMessages() {
-        chatService.getChatMessages(threadId, new ChatService.ChatServiceCallback<List<ChatMessage>>() {
+    private void loadCurrentUserInfo() {
+        if (currentUser == null) return;
+
+        Log.d("ChatDetailFragment", "Loading user info for: " + currentUser.getUid());
+
+        // First check if user is agent by directly getting the thread info
+        chatService.getThreadById(threadId, new ChatService.ChatServiceCallback<ChatThread>() {
             @Override
-            public void onSuccess(List<ChatMessage> result) {
-                messages.clear();
-                messages.addAll(result);
-                messagesAdapter.notifyDataSetChanged();
+            public void onSuccess(ChatThread thread) {
+                boolean isAgent = thread.getAgentId().equals(currentUser.getUid());
 
-                // Scroll to bottom
-                if (!messages.isEmpty()) {
-                    messagesRecyclerView.scrollToPosition(messages.size() - 1);
+                if (isAgent) {
+                    Log.d("ChatDetailFragment", "Current user is the agent");
+                    // User is agent, get info from agents collection
+                    firestore.getDb().collection("agents").document(currentUser.getUid()).get()
+                            .addOnSuccessListener(agentSnapshot -> {
+                                if (agentSnapshot.exists()) {
+                                    String firstName = agentSnapshot.getString("firstName");
+                                    String lastName = agentSnapshot.getString("lastName");
+                                    currentUserName = (firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "") + " (Agent)";
+                                    currentUserProfileImage = agentSnapshot.getString("profileImageUrl");
+
+                                    Log.d("ChatDetailFragment", "Agent info loaded: " + currentUserName);
+                                }
+                            })
+                            .addOnFailureListener(e -> {
+                                Log.e("ChatDetailFragment", "Error loading agent info", e);
+                            });
+                } else {
+                    Log.d("ChatDetailFragment", "Current user is the client");
+                    // User is client, get info from clients collection
+                    firestore.getDb().collection("clients").document(currentUser.getUid()).get()
+                            .addOnSuccessListener(clientSnapshot -> {
+                                if (clientSnapshot.exists()) {
+                                    String firstName = clientSnapshot.getString("firstName");
+                                    String lastName = clientSnapshot.getString("lastName");
+                                    currentUserName = (firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "");
+                                    currentUserProfileImage = clientSnapshot.getString("profileImageUrl");
+
+                                    Log.d("ChatDetailFragment", "Client info loaded: " + currentUserName);
+                                }
+                            })
+                            .addOnFailureListener(e -> {
+                                Log.e("ChatDetailFragment", "Error loading client info", e);
+                            });
                 }
-
-                // Mark messages as read
-                chatService.markMessagesAsRead(threadId, currentUser.getUid(), new ChatService.ChatServiceCallback<Void>() {
-                    @Override
-                    public void onSuccess(Void result) {
-                        // Messages marked as read
-                    }
-
-                    @Override
-                    public void onFailure(String error) {
-                        Log.e("ChatDetailFragment", "Failed to mark messages as read: " + error);
-                    }
-                });
             }
 
             @Override
             public void onFailure(String error) {
-                Toast.makeText(getContext(), "Error loading messages: " + error, Toast.LENGTH_SHORT).show();
+                Log.e("ChatDetailFragment", "Failed to get thread info: " + error);
+                // Fallback to checking both collections
+                checkAgentThenClient();
+            }
+        });
+    }
+
+    private void checkAgentThenClient() {
+        firestore.getDb().collection("agents").document(currentUser.getUid()).get()
+                .addOnSuccessListener(agentSnapshot -> {
+                    if (agentSnapshot.exists()) {
+                        String firstName = agentSnapshot.getString("firstName");
+                        String lastName = agentSnapshot.getString("lastName");
+                        currentUserName = (firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "") + " (Agent)";
+                        currentUserProfileImage = agentSnapshot.getString("profileImageUrl");
+
+                        Log.d("ChatDetailFragment", "Fallback: Agent info loaded: " + currentUserName);
+                    } else {
+                        // Not found in agents, try clients
+                        firestore.getDb().collection("clients").document(currentUser.getUid()).get()
+                                .addOnSuccessListener(clientSnapshot -> {
+                                    if (clientSnapshot.exists()) {
+                                        String firstName = clientSnapshot.getString("firstName");
+                                        String lastName = clientSnapshot.getString("lastName");
+                                        currentUserName = (firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "");
+                                        currentUserProfileImage = clientSnapshot.getString("profileImageUrl");
+
+                                        Log.d("ChatDetailFragment", "Fallback: Client info loaded: " + currentUserName);
+                                    }
+                                });
+                    }
+                });
+    }
+
+    private void setupRealtimeMessagesListener() {
+        chatService.addMessagesListener(threadId, new ChatService.MessagesListener() {
+            @Override
+            public void onMessagesUpdated(List<ChatMessage> updatedMessages) {
+                // Update the messages list
+                messages.clear();
+                messages.addAll(updatedMessages);
+                messagesAdapter.notifyDataSetChanged();
+
+                // Scroll to bottom on updates
+                if (!messages.isEmpty()) {
+                    messagesRecyclerView.scrollToPosition(messages.size() - 1);
+
+                    // Mark as read if this is not the initial load
+                    if (!isInitialLoad) {
+                        markMessagesAsRead();
+                    }
+                    isInitialLoad = false;
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                if (isAdded()) {
+                    Toast.makeText(getContext(), "Error updating messages: " + error, Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
 
     private void sendMessage(String messageText) {
-        // Fetch current user's details
-        firestore.getDb().collection("agents").document(currentUser.getUid()).get()
-                .addOnSuccessListener(agentSnapshot -> {
-                    String senderName;
-                    String senderProfileImage;
+        if (currentUser == null) return;
 
-                    if (agentSnapshot.exists()) {
-                        // User is an agent
-                        senderName = agentSnapshot.getString("firstName") + " " +
-                                agentSnapshot.getString("lastName");
-                        senderProfileImage = agentSnapshot.getString("profileImageUrl");
+        // If currentUserName is still null, use a default
+        String senderName = currentUserName != null ? currentUserName : "User";
 
-                        createAndSendMessage(senderName, senderProfileImage, messageText);
-                    } else {
-                        // User is a client
-                        firestore.getDb().collection("clients").document(currentUser.getUid()).get()
-                                .addOnSuccessListener(clientSnapshot -> {
-                                    String firstName = clientSnapshot.getString("firstName");
-                                    String lastName = clientSnapshot.getString("lastName");
-                                    String profileImage = clientSnapshot.getString("profileImageUrl");
-
-                                    createAndSendMessage(
-                                            firstName + " " + lastName,
-                                            profileImage,
-                                            messageText
-                                    );
-                                });
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(getContext(), "Error sending message", Toast.LENGTH_SHORT).show();
-                });
-    }
-
-    private void createAndSendMessage(String senderName, String senderProfileImage, String messageText) {
         ChatMessage message = new ChatMessage(
                 currentUser.getUid(),
                 senderName,
                 receiverId,
                 messageText,
-                senderProfileImage
+                currentUserProfileImage
         );
+
+        // Clear input immediately for better UX
+        messageInput.setText("");
 
         chatService.sendMessage(threadId, message, new ChatService.ChatServiceCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
-                // Clear input and scroll to bottom
-                messageInput.setText("");
-                loadChatMessages();
+                // Message sent successfully - we'll get it back via the listener
             }
 
             @Override
             public void onFailure(String error) {
-                Toast.makeText(getContext(), "Failed to send message: " + error, Toast.LENGTH_SHORT).show();
+                if (isAdded()) {
+                    Toast.makeText(getContext(), "Failed to send message: " + error, Toast.LENGTH_SHORT).show();
+                }
             }
         });
+    }
+
+    private void markMessagesAsRead() {
+        if (currentUser == null || threadId == null) return;
+
+        chatService.markMessagesAsRead(threadId, currentUser.getUid(), new ChatService.ChatServiceCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                // Messages marked as read
+            }
+
+            @Override
+            public void onFailure(String error) {
+                // Just log the error, don't show to user
+                if (isAdded()) {
+                    System.out.println("Error marking messages as read: " + error);
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        // Remove message listener when fragment is destroyed
+        if (threadId != null) {
+            chatService.removeMessagesListener(threadId);
+        }
     }
 }

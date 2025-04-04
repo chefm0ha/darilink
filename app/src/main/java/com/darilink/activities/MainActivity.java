@@ -206,6 +206,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             } else if (id == R.id.nav_requests) {
                 // Load Agent Requests fragment
                 loadFragment(new AgentRequestsFragment());
+            } else if (id == R.id.nav_chats) {
+                // Load Chats fragment
+                loadFragment(new ChatThreadsFragment());
             }
         } else {
             // Client specific navigation

@@ -11,7 +11,9 @@ public class ChatThread {
     private String agentProfileImage;
     private String lastMessage;
     private long lastMessageTimestamp;
-    private int unreadCount;
+    private int clientUnreadCount;
+    private int agentUnreadCount;
+    private String propertyTitle; // To show property context in the chat
 
     // Constructors
     public ChatThread() {}
@@ -27,7 +29,8 @@ public class ChatThread {
         this.clientProfileImage = clientProfileImage;
         this.agentProfileImage = agentProfileImage;
         this.lastMessageTimestamp = System.currentTimeMillis();
-        this.unreadCount = 0;
+        this.clientUnreadCount = 0;
+        this.agentUnreadCount = 0;
     }
 
     // Getters and Setters
@@ -61,6 +64,12 @@ public class ChatThread {
     public long getLastMessageTimestamp() { return lastMessageTimestamp; }
     public void setLastMessageTimestamp(long lastMessageTimestamp) { this.lastMessageTimestamp = lastMessageTimestamp; }
 
-    public int getUnreadCount() { return unreadCount; }
-    public void setUnreadCount(int unreadCount) { this.unreadCount = unreadCount; }
+    public int getClientUnreadCount() { return clientUnreadCount; }
+    public void setClientUnreadCount(int clientUnreadCount) { this.clientUnreadCount = clientUnreadCount; }
+
+    public int getAgentUnreadCount() { return agentUnreadCount; }
+    public void setAgentUnreadCount(int agentUnreadCount) { this.agentUnreadCount = agentUnreadCount; }
+
+    public String getPropertyTitle() { return propertyTitle; }
+    public void setPropertyTitle(String propertyTitle) { this.propertyTitle = propertyTitle; }
 }

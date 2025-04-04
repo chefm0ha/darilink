@@ -28,13 +28,13 @@
         android:layout_marginBottom="8dp" />
 
     <Button
-        android:id="@+id/emailButton"
+        android:id="@+id/chatButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/email_agent"
-        android:backgroundTint="@color/muted_terracotta"
+        android:text="@string/chat_with_agent"
+        android:backgroundTint="@color/tea_caddy_green"
         android:textColor="@color/white"
-        app:icon="@drawable/ic_email"
+        app:icon="@drawable/ic_chat"
         app:iconTint="@color/white"
         android:layout_marginBottom="16dp" />
 

@@ -14,27 +14,48 @@
         android:layout_height="wrap_content"
         android:background="@color/white"
         android:elevation="4dp"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        android:gravity="center_vertical"
+        android:orientation="vertical"
         app:layout_constraintTop_toTopOf="parent">
 
-        <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/receiverProfileImage"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@drawable/default_profile"
-            android:layout_marginEnd="12dp"/>
-
-        <TextView
-            android:id="@+id/receiverNameText"
-            android:layout_width="0dp"
+        <!-- User Info -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="@color/deep_umber"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            tools:text="John Doe" />
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:gravity="center_vertical">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/receiverProfileImage"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/default_profile"
+                android:layout_marginEnd="12dp"/>
+
+            <TextView
+                android:id="@+id/receiverNameText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/deep_umber"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                tools:text="John Doe" />
+        </LinearLayout>
+
+        <!-- Property Context -->
+        <TextView
+            android:id="@+id/propertyInfoText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="12dp"
+            android:paddingBottom="8dp"
+            android:textColor="@color/muted_terracotta"
+            android:textSize="14sp"
+            android:textStyle="italic"
+            android:visibility="gone"
+            tools:text="Re: Modern 2-Bedroom Apartment"
+            tools:visibility="visible" />
     </LinearLayout>
 
     <!-- Messages RecyclerView -->
@@ -69,7 +90,9 @@
             android:hint="@string/type_a_message"
             android:padding="12dp"
             android:textColor="@color/deep_umber"
-            android:textColorHint="@color/muted_terracotta"/>
+            android:textColorHint="@color/muted_terracotta"
+            android:maxLines="4"
+            android:inputType="textMultiLine"/>
 
         <ImageView
             android:id="@+id/sendButton"
@@ -79,6 +102,7 @@
             android:background="@drawable/circle_background"
             android:src="@drawable/ic_send"
             app:tint="@color/white"
-            android:backgroundTint="@color/deep_umber"/>
+            android:backgroundTint="@color/deep_umber"
+            android:contentDescription="@string/send"/>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
