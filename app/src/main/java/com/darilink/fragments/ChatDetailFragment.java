@@ -346,18 +346,43 @@ public class ChatDetailFragment extends Fragment {
     private void markMessagesAsRead() {
         if (currentUser == null || threadId == null) return;
 
-        chatService.markMessagesAsRead(threadId, currentUser.getUid(), new ChatService.ChatServiceCallback<Void>() {
+        // First determine if the current user is agent or client for this thread
+        chatService.getThreadById(threadId, new ChatService.ChatServiceCallback<ChatThread>() {
             @Override
-            public void onSuccess(Void result) {
-                // Messages marked as read
+            public void onSuccess(ChatThread thread) {
+                boolean isAgent = currentUser.getUid().equals(thread.getAgentId());
+                String fieldToUpdate = isAgent ? "agentUnreadCount" : "clientUnreadCount";
+
+                // Update the thread document directly to reset the unread count
+                firestore.getDb().collection("chat_threads")
+                        .document(threadId)
+                        .update(fieldToUpdate, 0)
+                        .addOnSuccessListener(aVoid -> {
+                            Log.d("ChatDetailFragment", "Reset unread count for " +
+                                    (isAgent ? "agent" : "client"));
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e("ChatDetailFragment", "Failed to reset unread count", e);
+                        });
+
+                // Also mark individual messages as read
+                chatService.markMessagesAsRead(threadId, currentUser.getUid(),
+                        new ChatService.ChatServiceCallback<Void>() {
+                            @Override
+                            public void onSuccess(Void result) {
+                                Log.d("ChatDetailFragment", "Marked messages as read");
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                Log.e("ChatDetailFragment", "Error marking messages as read: " + error);
+                            }
+                        });
             }
 
             @Override
             public void onFailure(String error) {
-                // Just log the error, don't show to user
-                if (isAdded()) {
-                    System.out.println("Error marking messages as read: " + error);
-                }
+                Log.e("ChatDetailFragment", "Error getting thread to mark messages as read: " + error);
             }
         });
     }

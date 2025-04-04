@@ -261,43 +261,59 @@ public class ChatService {
 
     // Mark messages as read
     public void markMessagesAsRead(String threadId, String userId, ChatServiceCallback<Void> callback) {
+        // Get the thread to determine if user is agent or client
         db.collection(CHAT_THREADS_COLLECTION)
                 .document(threadId)
-                .collection(CHAT_MESSAGES_COLLECTION)
-                .whereEqualTo("receiverId", userId)
-                .whereEqualTo("isRead", false)
                 .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (queryDocumentSnapshots.isEmpty()) {
-                        // No unread messages
-                        callback.onSuccess(null);
+                .addOnSuccessListener(threadDoc -> {
+                    ChatThread thread = threadDoc.toObject(ChatThread.class);
+                    if (thread == null) {
+                        callback.onFailure("Thread not found");
                         return;
                     }
 
-                    WriteBatch batch = db.batch();
-                    for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
-                        DocumentReference messageRef = document.getReference();
-                        batch.update(messageRef, "isRead", true);
-                    }
+                    // Determine counter field to reset
+                    boolean isAgent = userId.equals(thread.getAgentId());
+                    String counterField = isAgent ? "agentUnreadCount" : "clientUnreadCount";
 
-                    // Reset unread count for the user
-                    DocumentReference threadRef = db.collection(CHAT_THREADS_COLLECTION).document(threadId);
-                    threadRef.get().addOnSuccessListener(threadDoc -> {
-                        String unreadField = userId.equals(threadDoc.getString("clientId")) ?
-                                "clientUnreadCount" : "agentUnreadCount";
-                        batch.update(threadRef, unreadField, 0);
+                    // Mark messages as read
+                    db.collection(CHAT_THREADS_COLLECTION)
+                            .document(threadId)
+                            .collection(CHAT_MESSAGES_COLLECTION)
+                            .whereEqualTo("receiverId", userId)
+                            .whereEqualTo("isRead", false)
+                            .get()
+                            .addOnSuccessListener(queryDocumentSnapshots -> {
+                                if (queryDocumentSnapshots.isEmpty()) {
+                                    // No unread messages
+                                    callback.onSuccess(null);
+                                    return;
+                                }
 
-                        batch.commit()
-                                .addOnSuccessListener(aVoid -> callback.onSuccess(null))
-                                .addOnFailureListener(e -> {
-                                    Log.e(TAG, "Error marking messages as read", e);
-                                    callback.onFailure(e.getMessage());
-                                });
-                    });
+                                WriteBatch batch = db.batch();
+                                for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                                    DocumentReference messageRef = document.getReference();
+                                    batch.update(messageRef, "isRead", true);
+                                }
+
+                                // Reset unread count
+                                DocumentReference threadRef = db.collection(CHAT_THREADS_COLLECTION).document(threadId);
+                                batch.update(threadRef, counterField, 0);
+
+                                batch.commit()
+                                        .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+                                        .addOnFailureListener(e -> {
+                                            Log.e(TAG, "Error marking messages as read", e);
+                                            callback.onFailure(e.getMessage());
+                                        });
+                            })
+                            .addOnFailureListener(e -> {
+                                Log.e(TAG, "Error finding unread messages", e);
+                                callback.onFailure(e.getMessage());
+                            });
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error finding unread messages", e);
-                    callback.onFailure(e.getMessage());
+                    callback.onFailure("Error getting thread: " + e.getMessage());
                 });
     }
 
